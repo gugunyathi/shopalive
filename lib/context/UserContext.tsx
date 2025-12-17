@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useCDPReact } from '@coinbase/cdp-react';
+import { useAccount } from 'wagmi';
 
 interface UserProfile {
   _id: string;
@@ -35,7 +35,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated, user: cdpUser, address } = useCDPReact();
+  const { address, isConnected } = useAccount();
+  const isAuthenticated = isConnected;
 
   const fetchUser = async (walletAddress: string) => {
     try {
@@ -72,7 +73,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           const walletResponse = await fetch('/api/wallet/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: cdpUser?.id || 'temp' }),
+            body: JSON.stringify({ userId: address }),
           });
           if (walletResponse.ok) {
             walletData = await walletResponse.json();
@@ -89,8 +90,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           walletAddress: address,
           walletId: walletData?.walletId || userData.walletId,
-          authProviderId: cdpUser?.id || `temp_${Date.now()}`,
-          username: userData.username || `user_${Date.now()}`,
+          authProvider: 'wallet',
+          authProviderId: address,
+          username: userData.username || `user_${address?.slice(0, 8)}`,
           ...userData,
         }),
       });

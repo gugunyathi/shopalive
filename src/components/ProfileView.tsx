@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useUser } from '@/lib/context/UserContext';
-import { useCDPReact } from '@coinbase/cdp-react';
+import { useAccount } from 'wagmi';
 import { useToast } from '@/hooks/use-toast';
 
 interface ProfileViewProps {
@@ -16,7 +16,7 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
   const [activeTab, setActiveTab] = useState<'videos' | 'products' | 'liked'>('videos');
   const [isFollowing, setIsFollowing] = useState(false);
   const { user: dbUser } = useUser();
-  const { address } = useCDPReact();
+  const { address } = useAccount();
   const { toast } = useToast();
 
   const copyToClipboard = (text: string) => {
