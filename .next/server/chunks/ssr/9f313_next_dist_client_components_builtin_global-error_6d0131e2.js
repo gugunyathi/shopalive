@@ -1,0 +1,3 @@
+module.exports=[1824,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(5298);a.n(d("[project]/shopalive/shopalive/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},79693,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(5298);a.n(d("[project]/shopalive/shopalive/node_modules/next/dist/client/components/builtin/global-error.js"))},28356,a=>{"use strict";a.i(1824);var b=a.i(79693);a.n(b)}];
+
+//# sourceMappingURL=9f313_next_dist_client_components_builtin_global-error_6d0131e2.js.map
