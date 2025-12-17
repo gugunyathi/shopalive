@@ -29,10 +29,6 @@ const Index = () => {
   const isAuthenticated = isSignedIn;
 
   const handleTabChange = (tab: string) => {
-    if ((tab === 'create' || tab === 'profile') && !isAuthenticated) {
-      setShowSignIn(true);
-      return;
-    }
     setActiveTab(tab);
   };
 

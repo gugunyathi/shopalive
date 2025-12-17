@@ -1,11 +1,13 @@
 import { Seller } from '@/types';
-import { BadgeCheck, Settings, Grid3X3, Video, ShoppingBag, Users, UserPlus, Share2, Wallet, Copy, ExternalLink } from 'lucide-react';
+import { BadgeCheck, Settings, Grid3X3, Video, ShoppingBag, Users, UserPlus, Share2, Wallet, Copy, ExternalLink, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useUser } from '@/lib/context/UserContext';
-import { useEvmAddress } from '@coinbase/cdp-hooks';
+import { useEvmAddress, useIsSignedIn } from '@coinbase/cdp-hooks';
 import { useToast } from '@/hooks/use-toast';
+import { AuthButton } from '@coinbase/cdp-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface ProfileViewProps {
   seller?: Seller;
@@ -17,6 +19,7 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
   const [isFollowing, setIsFollowing] = useState(false);
   const { user: dbUser } = useUser();
   const { evmAddress: address } = useEvmAddress();
+  const isSignedIn = useIsSignedIn();
   const { toast } = useToast();
 
   const copyToClipboard = (text: string) => {
@@ -55,6 +58,61 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
     { id: 'products', icon: ShoppingBag, label: 'Products' },
     { id: 'liked', icon: Grid3X3, label: 'Liked' },
   ];
+
+  // Show sign-in UI if user is not authenticated and viewing own profile
+  if (isOwnProfile && !isSignedIn) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h1 className="text-xl font-bold font-display text-foreground">Profile</h1>
+        </div>
+
+        {/* Sign In Prompt */}
+        <div className="flex flex-col items-center justify-center p-6 min-h-[60vh]">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6">
+            <User className="w-12 h-12 text-primary" />
+          </div>
+          
+          <Card className="w-full max-w-sm border-border/50">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-xl">Sign in to ShopAlive</CardTitle>
+              <CardDescription>
+                Connect your wallet to access your profile, track orders, and start selling
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-3">
+                <AuthButton />
+              </div>
+              
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-sm font-medium mb-3 text-center">Why sign in?</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span>Get your own crypto wallet</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Video className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span>Go live and sell products</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span>Track your purchases & sales</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span>Follow your favorite sellers</span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
