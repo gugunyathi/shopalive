@@ -1,10 +1,12 @@
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Trash2, ShoppingBag } from 'lucide-react';
+import { X, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { PaymentModal } from './PaymentModal';
 import { useToast } from '@/hooks/use-toast';
+import { useEvmAddress, useIsSignedIn } from '@coinbase/cdp-hooks';
+import { useActivity } from '@/hooks/use-activity';
 
 export interface CartItem extends Product {
   quantity: number;
@@ -26,22 +28,73 @@ export const CartModal = ({
   onClearCart,
 }: CartModalProps) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const { toast } = useToast();
+  const { evmAddress } = useEvmAddress();
+  const isSignedIn = useIsSignedIn();
+  const { trackPurchase } = useActivity();
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) return;
     
-    // For now, just show a success message
-    toast({
-      title: "Checkout Initiated! 🛍️",
-      description: `Total: $${total.toFixed(2)} for ${items.length} items`,
-    });
-    onClearCart();
-    onClose();
+    if (!isSignedIn || !evmAddress) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to complete your purchase",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsCheckingOut(true);
+    try {
+      // Get unique sellers from items
+      const sellerWallet = items[0]?.seller?.id || 'unknown';
+      
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerWallet: evmAddress,
+          sellerWallet: sellerWallet,
+          products: items.map(item => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+
+      const { order } = await response.json();
+      
+      // Track purchase activity
+      await trackPurchase(order._id, total, items.length);
+
+      toast({
+        title: "Order Placed! 🛍️",
+        description: `Order #${order._id.slice(-8).toUpperCase()} - Total: $${total.toFixed(2)}`,
+      });
+      
+      onClearCart();
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Checkout Failed",
+        description: error.message || "Failed to complete checkout",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   const handleBuyNow = (item: CartItem) => {
@@ -187,8 +240,16 @@ export const CartModal = ({
                   className="w-full gradient-primary border-0 glow"
                   size="lg"
                   onClick={handleCheckout}
+                  disabled={isCheckingOut}
                 >
-                  Checkout ({items.length} {items.length === 1 ? 'item' : 'items'})
+                  {isCheckingOut ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Checkout (${items.length} ${items.length === 1 ? 'item' : 'items'})`
+                  )}
                 </Button>
               </div>
             </>

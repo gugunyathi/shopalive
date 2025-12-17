@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { mockChatMessages } from '@/data/mockData';
+import { useActivity } from '@/hooks/use-activity';
 
 interface StreamViewerProps {
   stream: LiveStream;
@@ -45,6 +46,20 @@ export const StreamViewer = ({
   const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50000) + 10000);
   const [messages, setMessages] = useState<ChatMessage[]>(mockChatMessages);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const { trackStreamView, trackLike } = useActivity();
+  const hasTrackedView = useRef(false);
+
+  // Track stream view when becoming active
+  useEffect(() => {
+    if (isActive && !hasTrackedView.current) {
+      trackStreamView(stream.id, stream.title);
+      hasTrackedView.current = true;
+    }
+    // Reset when stream changes
+    if (!isActive) {
+      hasTrackedView.current = false;
+    }
+  }, [isActive, stream.id, stream.title, trackStreamView]);
 
   // Rotate products every 5 seconds
   useEffect(() => {
@@ -58,6 +73,9 @@ export const StreamViewer = ({
   }, [isActive, stream.products.length]);
 
   const handleLike = () => {
+    if (!isLiked) {
+      trackLike('stream', stream.id);
+    }
     setIsLiked(!isLiked);
     setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
   };

@@ -10,9 +10,11 @@ import { CDPReactProvider, type Config, type Theme } from "@coinbase/cdp-react";
 import { UserProvider } from "@/lib/context/UserContext";
 
 const cdpConfig: Config = {
-  projectId: process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "your-project-id",
+  projectId: process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "c782e910-b8f4-48a4-b8c2-07377f9026d2",
   ethereum: {
     createOnLogin: "smart",
+    chains: [8453], // Base Mainnet chain ID
+    defaultChainId: 8453, // Default to Base Mainnet
   },
   appName: "ShopAlive",
   appLogoUrl: "",

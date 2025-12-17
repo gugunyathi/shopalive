@@ -1,14 +1,62 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Video, Zap, Users, TrendingUp, Sparkles, Play, ArrowRight } from "lucide-react";
+import { AuthButton, useAuthModal } from "@coinbase/cdp-react";
+import { useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hooks";
+import { useUser } from "@/lib/context/UserContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface LandingPageProps {
   onGetStarted: () => void;
 }
 
 export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const isSignedIn = useIsSignedIn();
+  const { evmAddress } = useEvmAddress();
+  const { createOrUpdateUser, fetchUser } = useUser();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // When user signs in, create/fetch user and proceed to app
+  useEffect(() => {
+    const handleSignIn = async () => {
+      if (isSignedIn && evmAddress && !isProcessing) {
+        setIsProcessing(true);
+        try {
+          // Check if user exists, if not create them
+          let user = await fetchUser(evmAddress);
+          if (!user) {
+            user = await createOrUpdateUser({
+              walletAddress: evmAddress,
+              username: `user_${evmAddress.slice(0, 8)}`,
+              authProvider: 'wallet',
+              authProviderId: evmAddress,
+            });
+          }
+          setShowAuthModal(false);
+          onGetStarted();
+        } catch (error) {
+          console.error('Error during sign-in:', error);
+        } finally {
+          setIsProcessing(false);
+        }
+      }
+    };
+
+    handleSignIn();
+  }, [isSignedIn, evmAddress]);
+
+  const handleLaunchApp = () => {
+    if (isSignedIn) {
+      onGetStarted();
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Hero Section */}
@@ -28,7 +76,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
                 ShopAlive
               </span>
             </div>
-            <Button onClick={onGetStarted} size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+            <Button onClick={handleLaunchApp} size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
               Launch App
             </Button>
           </div>
@@ -55,7 +103,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 
-                onClick={onGetStarted}
+                onClick={handleLaunchApp}
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-lg px-8 h-14 group"
               >
@@ -90,6 +138,26 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Welcome to ShopAlive</DialogTitle>
+            <DialogDescription className="text-center">
+              Sign in to start shopping live and discover amazing products
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <AuthButton />
+            {isProcessing && (
+              <p className="text-center text-sm text-muted-foreground">
+                Setting up your account...
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Features Section */}
       <div className="relative py-24 bg-card/30">
@@ -197,7 +265,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
               Join thousands of shoppers discovering amazing products through live streams
             </p>
             <Button 
-              onClick={onGetStarted}
+              onClick={handleLaunchApp}
               size="lg" 
               className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-lg px-12 h-16 text-white group"
             >

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,14 +33,17 @@ import {
   Image as ImageIcon,
   Wallet,
   DollarSign,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useIsSignedIn } from '@coinbase/cdp-hooks';
+import { useIsSignedIn, useEvmAddress } from '@coinbase/cdp-hooks';
 import { AuthButton } from '@coinbase/cdp-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Product {
   id: string;
+  _id?: string;
   name: string;
   price: number;
   image: string;
@@ -56,6 +59,8 @@ interface ExternalLink {
 
 export const GoLiveView = () => {
   const isSignedIn = useIsSignedIn();
+  const { evmAddress } = useEvmAddress();
+  const { toast } = useToast();
   const [step, setStep] = useState<'setup' | 'products' | 'preview' | 'live'>('setup');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -64,6 +69,10 @@ export const GoLiveView = () => {
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
+  const [streamDuration, setStreamDuration] = useState(0);
+  const [viewerCount, setViewerCount] = useState(0);
   
   // New product form state
   const [newProduct, setNewProduct] = useState({
@@ -80,16 +89,70 @@ export const GoLiveView = () => {
     type: 'shop' as 'shop' | 'product' | 'website'
   });
 
-  const handleAddProduct = () => {
-    if (newProduct.name && newProduct.price) {
+  // Stream duration timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (step === 'live') {
+      interval = setInterval(() => {
+        setStreamDuration(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step]);
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Save product to database
+  const handleAddProduct = async () => {
+    if (!newProduct.name || !newProduct.price || !evmAddress) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sellerWallet: evmAddress,
+          name: newProduct.name,
+          description: newProduct.description || 'No description',
+          price: parseFloat(newProduct.price),
+          category: category || 'Other',
+          images: newProduct.image ? [newProduct.image] : [],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to add product');
+      }
+
+      const { product } = await response.json();
       setProducts([...products, {
-        id: Date.now().toString(),
-        name: newProduct.name,
-        price: parseFloat(newProduct.price),
-        image: newProduct.image || '/placeholder.jpg',
-        description: newProduct.description
+        id: product._id,
+        _id: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0] || '/placeholder.jpg',
+        description: product.description
       }]);
       setNewProduct({ name: '', price: '', description: '', image: '' });
+      
+      toast({
+        title: 'Product Added',
+        description: 'Your product has been saved successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add product',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,12 +166,75 @@ export const GoLiveView = () => {
     }
   };
 
-  const handleGoLive = () => {
-    if (!title.trim()) return;
-    setStep('live');
+  // Create stream and go live
+  const handleGoLive = async () => {
+    if (!title.trim() || !evmAddress) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/streams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sellerWallet: evmAddress,
+          title,
+          description,
+          category,
+          products: products.map(p => p._id || p.id),
+          externalLinks,
+          status: 'live',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to start stream');
+      }
+
+      const { stream } = await response.json();
+      setCurrentStreamId(stream._id);
+      setStreamDuration(0);
+      setStep('live');
+      
+      toast({
+        title: 'You\'re Live! 🔴',
+        description: 'Your stream has started successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to start stream',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEndStream = () => {
+  // End stream
+  const handleEndStream = async () => {
+    if (currentStreamId) {
+      try {
+        await fetch('/api/streams', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            streamId: currentStreamId,
+            status: 'ended',
+          }),
+        });
+        
+        toast({
+          title: 'Stream Ended',
+          description: `Stream duration: ${formatDuration(streamDuration)}`,
+        });
+      } catch (error) {
+        console.error('Error ending stream:', error);
+      }
+    }
+    
+    setCurrentStreamId(null);
+    setStreamDuration(0);
     setStep('setup');
   };
 
@@ -234,11 +360,11 @@ export const GoLiveView = () => {
             </Badge>
             <Badge variant="secondary" className="bg-black/50 backdrop-blur">
               <Users className="w-3 h-3 mr-1" />
-              0 viewers
+              {viewerCount} viewers
             </Badge>
             <Badge variant="secondary" className="bg-black/50 backdrop-blur">
               <Clock className="w-3 h-3 mr-1" />
-              00:00
+              {formatDuration(streamDuration)}
             </Badge>
           </div>
 
@@ -504,10 +630,14 @@ export const GoLiveView = () => {
 
                     <Button 
                       onClick={handleAddProduct}
-                      disabled={!newProduct.name || !newProduct.price}
+                      disabled={!newProduct.name || !newProduct.price || isLoading}
                       className="w-full"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
                       Add Product
                     </Button>
                   </CardContent>
@@ -788,10 +918,15 @@ export const GoLiveView = () => {
               </Button>
               <Button
                 onClick={handleGoLive}
+                disabled={isLoading}
                 size="lg"
                 className="flex-1 h-14 text-lg bg-gradient-to-r from-primary to-accent hover:opacity-90"
               >
-                <Radio className="w-5 h-5 mr-2" />
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <Radio className="w-5 h-5 mr-2" />
+                )}
                 Go Live Now
               </Button>
             </div>
