@@ -1,8 +1,11 @@
 import { Seller } from '@/types';
-import { BadgeCheck, Settings, Grid3X3, Video, ShoppingBag, Users, UserPlus, Share2 } from 'lucide-react';
+import { BadgeCheck, Settings, Grid3X3, Video, ShoppingBag, Users, UserPlus, Share2, Wallet, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useUser } from '@/lib/context/UserContext';
+import { useCDPReact } from '@coinbase/cdp-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfileViewProps {
   seller?: Seller;
@@ -12,9 +15,27 @@ interface ProfileViewProps {
 export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) => {
   const [activeTab, setActiveTab] = useState<'videos' | 'products' | 'liked'>('videos');
   const [isFollowing, setIsFollowing] = useState(false);
+  const { user: dbUser } = useUser();
+  const { address } = useCDPReact();
+  const { toast } = useToast();
 
-  // Mock user data for own profile
-  const user = seller || {
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: "Wallet address copied to clipboard",
+    });
+  };
+
+  // Use database user data if available for own profile
+  const user = isOwnProfile && dbUser ? {
+    id: dbUser._id,
+    name: dbUser.username,
+    username: dbUser.username,
+    avatar: dbUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop',
+    followers: dbUser.followers,
+    isVerified: dbUser.isVerified,
+  } : seller || {
     id: 'me',
     name: 'Your Name',
     username: 'yourprofile',
@@ -76,6 +97,48 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
             </div>
           ))}
         </div>
+
+        {/* Wallet Info - Only for own profile */}
+        {isOwnProfile && address && (
+          <div className="w-full max-w-md mt-6 p-4 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Wallet className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-sm">Wallet Address</span>
+            </div>
+            <div className="flex items-center gap-2 bg-background rounded-lg p-3">
+              <code className="text-xs text-muted-foreground flex-1 truncate">
+                {address}
+              </code>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 flex-shrink-0"
+                onClick={() => copyToClipboard(address)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 flex-shrink-0"
+                asChild
+              >
+                <a 
+                  href={`https://basescan.org/address/${address}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+            {dbUser?.walletId && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Wallet ID: {dbUser.walletId.slice(0, 20)}...
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center gap-3 mt-6 w-full max-w-xs">
