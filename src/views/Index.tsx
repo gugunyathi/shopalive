@@ -7,6 +7,7 @@ import { DiscoverView } from '@/components/DiscoverView';
 import { ProfileView } from '@/components/ProfileView';
 import { LandingPage } from '@/components/LandingPage';
 import { SignInModal } from '@/components/SignInModal';
+import { GoLiveView } from '@/components/GoLiveView';
 import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { CartModal, CartItem } from '@/components/CartModal';
@@ -132,19 +133,7 @@ const Index = () => {
       case 'profile':
         return <ProfileView isOwnProfile />;
       case 'create':
-        return (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center p-8">
-              <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4 glow">
-                <span className="text-4xl">📹</span>
-              </div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Go Live</h2>
-              <p className="text-muted-foreground max-w-xs mx-auto">
-                Start streaming and showcase your products to thousands of viewers!
-              </p>
-            </div>
-          </div>
-        );
+        return <GoLiveView />;
       default:
         return null;
     }
