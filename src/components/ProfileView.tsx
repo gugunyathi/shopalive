@@ -16,7 +16,7 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
   const [activeTab, setActiveTab] = useState<'videos' | 'products' | 'liked'>('videos');
   const [isFollowing, setIsFollowing] = useState(false);
   const { user: dbUser } = useUser();
-  const address = useEvmAddress();
+  const { evmAddress: address } = useEvmAddress();
   const { toast } = useToast();
 
   const copyToClipboard = (text: string) => {
