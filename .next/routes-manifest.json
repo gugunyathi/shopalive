@@ -44,6 +44,18 @@
       "regex": "^/api/\\.well\\-known/farcaster\\.json(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/\\.well\\-known/farcaster\\.json(?:/)?$"
+    },
+    {
+      "page": "/api/users",
+      "regex": "^/api/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/users(?:/)?$"
+    },
+    {
+      "page": "/api/wallet/create",
+      "regex": "^/api/wallet/create(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/wallet/create(?:/)?$"
     }
   ],
   "dataRoutes": [],

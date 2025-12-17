@@ -1,6 +1,10 @@
 'use client';
 
-import Index from '@/views/Index';
+import dynamic from 'next/dynamic';
+
+const Index = dynamic(() => import('@/views/Index'), {
+  ssr: false,
+});
 
 export default function Home() {
   return <Index />;

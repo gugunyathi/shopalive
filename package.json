@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coinbase/cdp-core": "^0.0.73",
+    "@coinbase/cdp-hooks": "^0.0.73",
     "@coinbase/cdp-react": "^0.0.73",
     "@coinbase/coinbase-sdk": "^0.25.0",
     "@farcaster/miniapp-sdk": "^0.2.1",

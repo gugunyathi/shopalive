@@ -1,0 +1,3 @@
+module.exports=[8101,a=>{"use strict";var b=a.i(45260);function c(){return(0,b.jsxs)("div",{className:"flex flex-col items-center justify-center min-h-screen bg-background text-foreground",children:[(0,b.jsx)("h1",{className:"text-4xl font-bold mb-4",children:"404 - Page Not Found"}),(0,b.jsx)("p",{className:"text-muted-foreground mb-8",children:"The page you're looking for doesn't exist."}),(0,b.jsx)("a",{href:"/",className:"px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors",children:"Go Home"})]})}a.s(["default",()=>c])}];
+
+//# sourceMappingURL=shopalive_shopalive_app_not-found_tsx_d04f8ee0._.js.map

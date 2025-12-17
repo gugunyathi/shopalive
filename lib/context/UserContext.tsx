@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAccount } from 'wagmi';
 
 interface UserProfile {
   _id: string;
@@ -25,18 +24,17 @@ interface UserContextType {
   user: UserProfile | null;
   loading: boolean;
   error: string | null;
-  createOrUpdateUser: (data: Partial<UserProfile>) => Promise<void>;
-  refreshUser: () => Promise<void>;
+  fetchUser: (walletAddress: string) => Promise<UserProfile | null>;
+  createOrUpdateUser: (data: Partial<UserProfile> & { walletAddress: string }) => Promise<UserProfile | undefined>;
+  refreshUser: (walletAddress: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { address, isConnected } = useAccount();
-  const isAuthenticated = isConnected;
 
   const fetchUser = async (walletAddress: string) => {
     try {
@@ -57,14 +55,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createOrUpdateUser = async (userData: Partial<UserProfile>) => {
+  const createOrUpdateUser = async (userData: Partial<UserProfile> & { walletAddress: string }) => {
     try {
       setLoading(true);
       setError(null);
-
-      if (!address) {
-        throw new Error('No wallet address available');
-      }
 
       // First, try to create wallet via API
       let walletData = null;
@@ -73,7 +67,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           const walletResponse = await fetch('/api/wallet/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: address }),
+            body: JSON.stringify({ userId: userData.walletAddress }),
           });
           if (walletResponse.ok) {
             walletData = await walletResponse.json();
@@ -88,11 +82,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          walletAddress: address,
           walletId: walletData?.walletId || userData.walletId,
           authProvider: 'wallet',
-          authProviderId: address,
-          username: userData.username || `user_${address?.slice(0, 8)}`,
+          authProviderId: userData.walletAddress,
+          username: userData.username || `user_${userData.walletAddress?.slice(0, 8)}`,
           ...userData,
         }),
       });
@@ -103,6 +96,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       setUser(data.user);
+      return data.user;
     } catch (err: any) {
       console.error('Error creating/updating user:', err);
       setError(err.message);
@@ -111,30 +105,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshUser = async () => {
-    if (!address) return;
+  const refreshUser = async (walletAddress: string) => {
+    if (!walletAddress) return;
     setLoading(true);
-    await fetchUser(address);
+    await fetchUser(walletAddress);
     setLoading(false);
   };
-
-  useEffect(() => {
-    if (isAuthenticated && address) {
-      fetchUser(address).then((existingUser) => {
-        if (!existingUser) {
-          // Auto-create user if they don't exist
-          createOrUpdateUser({
-            authProvider: 'email' as any,
-            username: `user_${address.slice(0, 8)}`,
-          });
-        }
-        setLoading(false);
-      });
-    } else {
-      setUser(null);
-      setLoading(false);
-    }
-  }, [isAuthenticated, address]);
 
   return (
     <UserContext.Provider
@@ -142,6 +118,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         error,
+        fetchUser,
         createOrUpdateUser,
         refreshUser,
       }}
