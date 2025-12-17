@@ -5,6 +5,7 @@ import { TopTabs } from '@/components/TopTabs';
 import { WishlistView } from '@/components/WishlistView';
 import { DiscoverView } from '@/components/DiscoverView';
 import { ProfileView } from '@/components/ProfileView';
+import { LandingPage } from '@/components/LandingPage';
 import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { CartModal, CartItem } from '@/components/CartModal';
@@ -14,11 +15,16 @@ import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [feedTab, setFeedTab] = useState<'foryou' | 'following'>('foryou');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const { toast } = useToast();
+
+  if (showLanding) {
+    return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+  }
 
   const addToCart = (product: Product) => {
     setCartItems((prev) => {
