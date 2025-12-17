@@ -1,0 +1,57 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/OTPForm.css [app-client] (css) */
+.OTPForm-module__otp-form___G1-63 [data-part="input-group"] {
+  padding-bottom: 1.5em;
+}
+
+.OTPForm-module__otp-form___G1-63 [data-part="success"], .OTPForm-module__otp-form___G1-63 [data-part="error"] {
+  margin-top: -1.5em;
+}
+
+.OTPForm-module__form-footer___ybmdd {
+  flex-flow: column;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 1.5em;
+  padding-top: 1.5em;
+  padding-bottom: .5em;
+  display: flex;
+}
+
+.OTPForm-module__server-state-wrapper___R5j5k {
+  min-height: 1.5em;
+  margin-top: -1.5em;
+  position: relative;
+  top: -.25em;
+}
+
+.OTPForm-module__loading-spinner___8N9XU {
+  color: var(--cdp-web-colors-link-primary-text-default);
+  margin: 0 auto;
+  display: block;
+}
+
+.OTPForm-module__resend-wrapper___aZUAz {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  min-height: 1.5em;
+  display: flex;
+}
+
+.OTPForm-module__reset-timer___7ElWj {
+  color: var(--cdp-web-colors-page-text-muted);
+  justify-content: center;
+  align-items: center;
+  min-height: 1em;
+  font-weight: 500;
+  line-height: 1em;
+  display: flex;
+}
+
+.OTPForm-module__reset-timer___7ElWj p {
+  margin: 0;
+  font-size: .875em;
+  line-height: 1;
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_OTPForm_css_bad6b30c._.single.css.map*/

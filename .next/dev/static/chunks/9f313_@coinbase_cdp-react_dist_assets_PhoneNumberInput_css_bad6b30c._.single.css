@@ -1,0 +1,51 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/PhoneNumberInput.css [app-client] (css) */
+.PhoneNumberInput-module__phone-number-input___mYty2 {
+  --cdp-web-input-ring-width: 1px;
+  --cdp-web-input-ring-color: var(--cdp-web-colors-input-border-default);
+  box-sizing: border-box;
+  font-family: var(--cdp-web-font-family-input);
+  font-size: var(--cdp-web-font-size-base);
+  color: var(--cdp-web-colors-input-text-default);
+  align-items: stretch;
+  gap: .5em;
+  width: 100%;
+  line-height: 1.5;
+  transition: box-shadow .15s ease-in-out;
+  display: flex;
+}
+
+.PhoneNumberInput-module__phone-number-input___mYty2.PhoneNumberInput-module__inline-country-calling-code___FFgtI {
+  border-radius: var(--cdp-web-borderRadius-input);
+  background-color: var(--cdp-web-colors-input-bg-default);
+  box-shadow: 0 0 0 var(--cdp-web-input-ring-width) var(--cdp-web-input-ring-color) inset;
+  border: 0;
+  gap: 0;
+  padding-left: 1em;
+}
+
+.PhoneNumberInput-module__phone-number-input___mYty2.PhoneNumberInput-module__invalid___zDA2p, .PhoneNumberInput-module__phone-number-input___mYty2:focus-within.PhoneNumberInput-module__invalid___zDA2p {
+  --cdp-web-input-ring-color: var(--cdp-web-colors-input-border-error);
+}
+
+.PhoneNumberInput-module__phone-number-input___mYty2.PhoneNumberInput-module__success___uPjMx {
+  --cdp-web-input-ring-color: var(--cdp-web-colors-input-border-success);
+}
+
+.PhoneNumberInput-module__phone-number-input___mYty2:focus-within {
+  --cdp-web-input-ring-color: var(--cdp-web-colors-input-border-focus);
+  --cdp-web-input-ring-width: 2px;
+}
+
+.PhoneNumberInput-module__phone-number-input___mYty2.PhoneNumberInput-module__inline-country-calling-code___FFgtI .PhoneNumberInput-module__input___H-XG- {
+  --cdp-web-input-ring-width: 0px;
+  background-color: #0000;
+  padding-left: .75em;
+}
+
+.PhoneNumberInput-module__country-calling-code___N6zDW {
+  align-items: center;
+  gap: .25em;
+  display: flex;
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_PhoneNumberInput_css_bad6b30c._.single.css.map*/

@@ -1,0 +1,66 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/SignInModal.css [app-client] (css) */
+.SignInModal-module__trigger___IcJ8x {
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+.SignInModal-module__sign-in___n05-5 {
+  height: 100%;
+  overflow: hidden;
+}
+
+.SignInModal-module__sign-in___n05-5.SignInModal-module__no-footer___meSt1 {
+  padding-bottom: 2em;
+}
+
+.SignInModal-module__title-desc-wrapper___--XLa {
+  flex-direction: column;
+  gap: 1.5em;
+  margin-bottom: 1.5em;
+  display: flex;
+}
+
+.SignInModal-module__sign-in-form___Jzx1-, .SignInModal-module__sign-in-form___Jzx1- form {
+  flex-grow: 1;
+}
+
+.SignInModal-module__sign-in-image___DGg7B {
+  flex-grow: 1;
+  margin: 2em 0;
+}
+
+.SignInModal-module__footer___6qEo2 {
+  margin-top: 1.5em;
+}
+
+.SignInModal-module__buttons___jhaVn {
+  justify-content: flex-end;
+  align-items: center;
+  width: calc(100% + 1.5em);
+  margin-left: -.75em;
+  margin-right: -.75em;
+  display: flex;
+}
+
+.SignInModal-module__back-button___nMh2- {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.SignInModal-module__close-icon___b-gMh {
+  width: 1.5em;
+  height: auto;
+}
+
+@media (min-width: 450px) {
+  .SignInModal-module__sign-in-image___DGg7B {
+    flex-grow: 0;
+    margin: 0 0 1.5em;
+  }
+
+  .SignInModal-module__sign-in-image___DGg7B:empty {
+    display: none;
+  }
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_SignInModal_css_bad6b30c._.single.css.map*/

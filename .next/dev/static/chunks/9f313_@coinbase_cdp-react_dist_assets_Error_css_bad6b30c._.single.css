@@ -1,0 +1,23 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/Error.css [app-client] (css) */
+.Error-module__error___zeTQt {
+  color: var(--cdp-web-colors-fg-negative);
+  line-height: 1.25em;
+  font-family: var(--cdp-web-font-family-body);
+  font-size: var(--cdp-web-font-size-base);
+  gap: .25em;
+  margin: 0;
+  display: flex;
+}
+
+.Error-module__text___wQxPI {
+  font-size: .875em;
+}
+
+.Error-module__icon___uwkis {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: .875em;
+  height: 1.25em;
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_Error_css_bad6b30c._.single.css.map*/

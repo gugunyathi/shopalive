@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/Label.css"],"sourcesContent":[".Label-module__label___jDumT{font-size:.875em;line-height:1.43;font-weight:500;color:var(--cdp-web-colors-input-label-default)}\n"],"names":[],"mappings":"AAAA","ignoreList":[0]}}]
+}

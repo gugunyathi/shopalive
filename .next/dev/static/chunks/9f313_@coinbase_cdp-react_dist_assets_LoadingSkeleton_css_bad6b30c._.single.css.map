@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/LoadingSkeleton.css"],"sourcesContent":[".LoadingSkeleton-module__loading___kqndV{animation:LoadingSkeleton-module__pulse___x86cJ 2s cubic-bezier(.4,0,.6,1) infinite;background-color:var(--cdp-web-colors-bg-skeleton);cursor:progress}@keyframes LoadingSkeleton-module__pulse___x86cJ{50%{opacity:.5}}\n"],"names":[],"mappings":"AAAA;;;;;;AAAgM","ignoreList":[0]}}]
+}

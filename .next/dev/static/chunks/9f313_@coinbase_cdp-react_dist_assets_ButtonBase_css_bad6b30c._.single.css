@@ -1,0 +1,49 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/ButtonBase.css [app-client] (css) */
+.ButtonBase-module__btn___9S8PJ {
+  --cdp-web-button-ring-color: transparent;
+  --cdp-web-button-ring-width: 2px;
+  --cdp-web-button-ring-inset-color: transparent;
+  --cdp-web-button-ring-inset-width: 2px;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 0 var(--cdp-web-button-ring-inset-width) var(--cdp-web-button-ring-inset-color), 0 0 0 var(--cdp-web-button-ring-width) var(--cdp-web-button-ring-color);
+  color: var(--cdp-web-colors-page-text-default);
+  font-size: var(--cdp-web-font-size-base);
+  font-family: var(--cdp-web-font-family-interactive);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  background-color: #0000;
+  border: 0;
+  justify-content: center;
+  align-items: center;
+  gap: .5em;
+  padding: 1em;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out, transform .15s ease-in-out;
+  display: inline-flex;
+}
+
+.ButtonBase-module__full-width___vLJsn {
+  width: 100%;
+  display: flex;
+}
+
+.ButtonBase-module__size-lg___569jT {
+  padding: 1em;
+}
+
+.ButtonBase-module__size-md___sAsBJ {
+  padding: .75em;
+}
+
+.ButtonBase-module__size-sm___xHCtU {
+  padding: .5em .75em;
+}
+
+.ButtonBase-module__size-xs___LiiO7 {
+  padding: .25em .75em;
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_ButtonBase_css_bad6b30c._.single.css.map*/

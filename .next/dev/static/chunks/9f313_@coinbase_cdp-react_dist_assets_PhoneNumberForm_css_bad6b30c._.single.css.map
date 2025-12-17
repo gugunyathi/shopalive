@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/PhoneNumberForm.css"],"sourcesContent":[".PhoneNumberForm-module__form___ExO8G{display:flex;flex-direction:column;gap:1em}.PhoneNumberForm-module__server-error___AQcMg{justify-content:center}.PhoneNumberForm-module__phone-number-fieldset___0TsSH{border:0;padding:0;margin:0;min-width:0}\n"],"names":[],"mappings":"AAAA;;;;;;AAAiF;;;;AAAqE","ignoreList":[0]}}]
+}

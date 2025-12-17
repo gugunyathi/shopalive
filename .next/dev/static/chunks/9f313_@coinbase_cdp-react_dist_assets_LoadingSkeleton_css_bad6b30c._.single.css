@@ -1,0 +1,14 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/LoadingSkeleton.css [app-client] (css) */
+.LoadingSkeleton-module__loading___kqndV {
+  background-color: var(--cdp-web-colors-bg-skeleton);
+  cursor: progress;
+  animation: 2s cubic-bezier(.4, 0, .6, 1) infinite LoadingSkeleton-module__pulse___x86cJ;
+}
+
+@keyframes LoadingSkeleton-module__pulse___x86cJ {
+  50% {
+    opacity: .5;
+  }
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_LoadingSkeleton_css_bad6b30c._.single.css.map*/

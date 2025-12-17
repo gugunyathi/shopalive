@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { useAccount } from 'wagmi';
+import { useIsSignedIn } from '@coinbase/cdp-hooks';
 
 const Index = () => {
   const [showLanding, setShowLanding] = useState(true);
@@ -24,11 +24,11 @@ const Index = () => {
   const [showCart, setShowCart] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const { toast } = useToast();
-  const { isConnected } = useAccount();
-  const isAuthenticated = isConnected;
+  const isSignedIn = useIsSignedIn();
+  const isAuthenticated = isSignedIn;
 
   const handleTabChange = (tab: string) => {
-    if (tab === 'create' && !isAuthenticated) {
+    if ((tab === 'create' || tab === 'profile') && !isAuthenticated) {
       setShowSignIn(true);
       return;
     }

@@ -1,0 +1,26 @@
+/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/OTP.css [app-client] (css) */
+.OTP-module__otp___UjnM8 {
+  --cdp-web-otp-input-width: 25%;
+  flex-direction: column;
+  gap: .25em;
+  display: flex;
+}
+
+.OTP-module__group-container___hNqnB {
+  gap: .5em;
+  display: flex;
+}
+
+.OTP-module__input-container___snmj7 {
+  width: var(--cdp-web-otp-input-width);
+}
+
+.OTP-module__input___Vbd5m {
+  text-align: center;
+}
+
+.OTP-module__label___cK41n {
+  margin: 0 0 .43em;
+}
+
+/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_OTP_css_bad6b30c._.single.css.map*/

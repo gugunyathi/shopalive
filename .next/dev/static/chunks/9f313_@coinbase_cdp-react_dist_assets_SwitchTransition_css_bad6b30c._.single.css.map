@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/SwitchTransition.css"],"sourcesContent":[".SwitchTransition-module__transition-wrapper___jrI35[data-animate-height=true]{--cdp-web-transition-height: min-cotent;height:var(--cdp-web-transition-height);transition:height var(--cdp-web-transition-timeout, .2s) ease-in-out}\n"],"names":[],"mappings":"AAAA","ignoreList":[0]}}]
+}
