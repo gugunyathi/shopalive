@@ -59,13 +59,24 @@ export const ProductCard = ({
               )}
             </div>
           </div>
-          <Button
-            size="sm"
-            className="gradient-primary border-0 glow"
-            onClick={handleBuyClick}
-          >
-            <ShoppingBag className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8"
+              onClick={() => onAddToCart?.(product)}
+            >
+              <ShoppingBag className="h-4 w-4 mr-1" />
+              Cart
+            </Button>
+            <Button
+              size="sm"
+              className="gradient-primary border-0 glow h-8"
+              onClick={handleBuyClick}
+            >
+              Buy
+            </Button>
+          </div>
         </div>
         {showPayment && (
           <PaymentModal

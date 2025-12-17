@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LiveStream, ChatMessage } from '@/types';
+import { LiveStream, ChatMessage, Product } from '@/types';
 import { LiveBadge } from './LiveBadge';
 import { ProductCard } from './ProductCard';
 import { SellerInfo } from './SellerInfo';
@@ -26,6 +26,7 @@ interface StreamViewerProps {
   onPrevious?: () => void;
   hasNext?: boolean;
   hasPrevious?: boolean;
+  onAddToCart?: (product: Product) => void;
 }
 
 export const StreamViewer = ({
@@ -35,6 +36,7 @@ export const StreamViewer = ({
   onPrevious,
   hasNext,
   hasPrevious,
+  onAddToCart,
 }: StreamViewerProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [showChat, setShowChat] = useState(false);
@@ -194,7 +196,7 @@ export const StreamViewer = ({
           <ProductCard
             product={currentProduct}
             variant="compact"
-            onAddToCart={(p) => console.log('Add to cart:', p)}
+            onAddToCart={onAddToCart}
             onAddToWishlist={(p) => console.log('Add to wishlist:', p)}
           />
         )}

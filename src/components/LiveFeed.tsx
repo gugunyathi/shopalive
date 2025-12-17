@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LiveStream } from '@/types';
+import { LiveStream, Product } from '@/types';
 import { StreamViewer } from './StreamViewer';
 import { cn } from '@/lib/utils';
 
 interface LiveFeedProps {
   streams: LiveStream[];
+  onAddToCart?: (product: Product) => void;
 }
 
-export const LiveFeed = ({ streams }: LiveFeedProps) => {
+export const LiveFeed = ({ streams, onAddToCart }: LiveFeedProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
@@ -111,6 +112,7 @@ export const LiveFeed = ({ streams }: LiveFeedProps) => {
             onPrevious={goToPrevious}
             hasNext={currentIndex < streams.length - 1}
             hasPrevious={currentIndex > 0}
+            onAddToCart={onAddToCart}
           />
         </div>
       ))}
