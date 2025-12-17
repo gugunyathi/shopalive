@@ -1,0 +1,15 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEyMzQ1LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4MTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3OCJ9",
+    "payload": "eyJkb21haW4iOiJleGFtcGxlLmNvbSJ9",
+    "signature": "MHhhYmNkZWYxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3ODkw"
+  },
+  "frame": {
+    "version": "1",
+    "name": "ShopAlive",
+    "iconUrl": "https://shopalive.app/icon.png",
+    "splashImageUrl": "https://shopalive.app/splash.png",
+    "splashBackgroundColor": "#000000",
+    "homeUrl": "https://shopalive.app"
+  }
+}

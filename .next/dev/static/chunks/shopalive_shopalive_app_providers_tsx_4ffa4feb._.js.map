@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Acer/Documents/shopalive/shopalive/app/providers.tsx"],"sourcesContent":["'use client';\r\n\r\nimport { QueryClient, QueryClientProvider } from \"@tanstack/react-query\";\r\nimport { sdk } from '@farcaster/miniapp-sdk';\r\nimport { useEffect, useState } from 'react';\r\n\r\nexport function Providers({ children }: { children: React.ReactNode }) {\r\n  const [queryClient] = useState(() => new QueryClient());\r\n\r\n  useEffect(() => {\r\n    sdk.actions.ready();\r\n  }, []);\r\n\r\n  return (\r\n    <QueryClientProvider client={queryClient}>\r\n      {children}\r\n    </QueryClientProvider>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAEA;AAAA;AACA;AAAA;AACA;;;AAJA;;;;AAMO,SAAS,UAAU,EAAE,QAAQ,EAAiC;;IACnE,MAAM,CAAC,YAAY,GAAG,IAAA,mMAAQ;8BAAC,IAAM,IAAI,yNAAW;;IAEpD,IAAA,oMAAS;+BAAC;YACR,gMAAG,CAAC,OAAO,CAAC,KAAK;QACnB;8BAAG,EAAE;IAEL,qBACE,uNAAC,0OAAmB;QAAC,QAAQ;kBAC1B;;;;;;AAGP;GAZgB;KAAA"}}]
+}
