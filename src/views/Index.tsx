@@ -6,6 +6,7 @@ import { WishlistView } from '@/components/WishlistView';
 import { DiscoverView } from '@/components/DiscoverView';
 import { ProfileView } from '@/components/ProfileView';
 import { LandingPage } from '@/components/LandingPage';
+import { SignInModal } from '@/components/SignInModal';
 import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { CartModal, CartItem } from '@/components/CartModal';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { useCDPReact } from '@coinbase/cdp-react';
 
 const Index = () => {
   const [showLanding, setShowLanding] = useState(true);
@@ -20,7 +22,17 @@ const Index = () => {
   const [feedTab, setFeedTab] = useState<'foryou' | 'following'>('foryou');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
   const { toast } = useToast();
+  const { isAuthenticated } = useCDPReact();
+
+  const handleTabChange = (tab: string) => {
+    if (tab === 'create' && !isAuthenticated) {
+      setShowSignIn(true);
+      return;
+    }
+    setActiveTab(tab);
+  };
 
   if (showLanding) {
     return <LandingPage onGetStarted={() => setShowLanding(false)} />;
@@ -145,24 +157,13 @@ const Index = () => {
       </main>
 
       {/* Bottom Navigation */}
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Floating Cart Button - Above Likes */}
-      {activeTab === 'home' && (
-        <Button
-          className="fixed right-4 bottom-[240px] z-40 h-14 w-14 rounded-full gradient-primary border-0 glow shadow-lg hover:scale-110 transition-all"
-          onClick={() => setShowCart(true)}
-        >
-          <div className="relative">
-            <ShoppingCart className="h-6 w-6" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-background text-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-primary">
-                {cartItemCount > 9 ? '9+' : cartItemCount}
-              </span>
-            )}
-          </div>
-        </Button>
-      )}
+      {/* Sign In Modal */}
+      <SignInModal 
+        open={showSignIn} 
+        onOpenChange={setShowSignIn}
+      />
 
       {/* Cart Modal */}
       {showCart && (
