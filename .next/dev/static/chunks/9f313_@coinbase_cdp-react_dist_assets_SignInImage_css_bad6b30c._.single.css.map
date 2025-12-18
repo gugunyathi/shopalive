@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/SignInImage.css"],"sourcesContent":[".SignInImage-module__logo___rlzt-{display:block;margin:0 auto;width:auto;height:64px;-o-object-fit:cover;object-fit:cover}\n"],"names":[],"mappings":"AAAA","ignoreList":[0]}}]
-}

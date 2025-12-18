@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/ThemeProvider.css"],"sourcesContent":["@import\"https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap\";.ThemeProvider-module__wrapper___aXwhZ{width:100%}\n"],"names":[],"mappings":"AAAyK","ignoreList":[0]}}]
-}

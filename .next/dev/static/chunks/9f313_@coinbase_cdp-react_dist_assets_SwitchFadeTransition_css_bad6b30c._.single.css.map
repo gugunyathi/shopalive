@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/SwitchFadeTransition.css"],"sourcesContent":[".SwitchFadeTransition-module__switch-fade-transition___--lbT[data-transition=fade]{position:relative}.SwitchFadeTransition-module__switch-fade-transition___--lbT [data-transition=fade][data-status]{transition:opacity var(--cdp-web-transition-timeout, .2s);width:100%}.SwitchFadeTransition-module__switch-fade-transition___--lbT [data-transition=fade][data-status=preEnter]{opacity:0}.SwitchFadeTransition-module__switch-fade-transition___--lbT [data-transition=fade][data-status=exiting],.SwitchFadeTransition-module__switch-fade-transition___--lbT [data-transition=fade][data-status=exited]{opacity:0;position:absolute;top:0;left:0}\n"],"names":[],"mappings":"AAAA;;;;AAAqG;;;;;AAAsK;;;;AAAoH","ignoreList":[0]}}]
-}

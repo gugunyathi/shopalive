@@ -1,8 +1,0 @@
-/* [project]/shopalive/shopalive/node_modules/@coinbase/cdp-react/dist/assets/SwitchTransition.css [app-client] (css) */
-.SwitchTransition-module__transition-wrapper___jrI35[data-animate-height="true"] {
-  --cdp-web-transition-height: min-cotent;
-  height: var(--cdp-web-transition-height);
-  transition: height var(--cdp-web-transition-timeout, .2s) ease-in-out;
-}
-
-/*# sourceMappingURL=9f313_%40coinbase_cdp-react_dist_assets_SwitchTransition_css_bad6b30c._.single.css.map*/
