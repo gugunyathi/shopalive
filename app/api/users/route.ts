@@ -15,7 +15,9 @@ export async function POST(request: NextRequest) {
       walletAddress, 
       walletId,
       authProvider, 
-      authProviderId 
+      authProviderId,
+      isSeller,
+      bio
     } = body;
 
     // Validate required fields
@@ -35,20 +37,29 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
+      // Update existing user if there are new fields
+      if (walletId && !existingUser.walletId) {
+        existingUser.walletId = walletId;
+        await existingUser.save();
+      }
       return NextResponse.json({ user: existingUser }, { status: 200 });
     }
 
-    // Create new user
+    // Create new user with CDP wallet address
     const user = await User.create({
       email,
       phone,
       username,
       avatar,
-      walletAddress,
+      walletAddress,  // This is the CDP wallet address for receiving payments
       walletId,
       authProvider,
       authProviderId,
+      isSeller: isSeller || false,
+      bio,
     });
+
+    console.log(`[Users API] Created new user: ${username} with wallet: ${walletAddress}`);
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error: any) {

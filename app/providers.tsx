@@ -8,6 +8,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CDPReactProvider, type Config, type Theme } from "@coinbase/cdp-react";
 import { UserProvider } from "@/lib/context/UserContext";
+import { AuthSync } from "@/lib/components/AuthSync";
 
 const cdpConfig: Config = {
   projectId: process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "c782e910-b8f4-48a4-b8c2-07377f9026d2",
@@ -55,6 +56,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <CDPReactProvider config={cdpConfig} theme={cdpTheme}>
       <QueryClientProvider client={queryClient}>
         <UserProvider>
+          <AuthSync />
           <TooltipProvider>
             {children}
             <Toaster />

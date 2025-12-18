@@ -11,11 +11,15 @@ interface UserProfile {
   walletAddress: string;
   walletId?: string;
   authProvider: string;
+  authProviderId?: string;
   bio?: string;
   followers: number;
   following: number;
   totalViews: number;
+  totalSales: number;
+  totalPurchases: number;
   isVerified: boolean;
+  isSeller: boolean;
   createdAt: string;
   updatedAt: string;
 }
