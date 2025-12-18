@@ -15,8 +15,8 @@ interface PaymentModalProps {
 
 type PaymentState = 'idle' | 'processing' | 'polling' | 'success' | 'error';
 
-// Default seller wallet - replace with actual seller wallet from product
-const DEFAULT_SELLER_WALLET = '0x1234567890123456789012345678901234567890';
+// Platform wallet for commissions and platform revenue
+const PLATFORM_WALLET = process.env.NEXT_PUBLIC_PLATFORM_WALLET || '0x21f8dc27ab14584D292Afb86dCc45E994f6b8b87';
 
 export const PaymentModal = ({ 
   product, 
@@ -29,8 +29,8 @@ export const PaymentModal = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Use seller's wallet address if available, otherwise use default
-  const sellerWallet = recipientAddress || product.seller?.walletAddress || DEFAULT_SELLER_WALLET;
+  // Use seller's wallet address if available, otherwise use platform wallet
+  const sellerWallet = recipientAddress || product.seller?.walletAddress || PLATFORM_WALLET;
 
   const handleBasePay = async () => {
     setPaymentState('processing');

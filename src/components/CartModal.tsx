@@ -24,8 +24,8 @@ interface CartModalProps {
 
 type CheckoutState = 'idle' | 'processing' | 'polling' | 'success' | 'error';
 
-// Default seller wallet for checkout
-const DEFAULT_SELLER_WALLET = '0x1234567890123456789012345678901234567890';
+// Platform wallet for commissions and platform revenue
+const PLATFORM_WALLET = process.env.NEXT_PUBLIC_PLATFORM_WALLET || '0x21f8dc27ab14584D292Afb86dCc45E994f6b8b87';
 
 export const CartModal = ({
   items,
@@ -63,8 +63,8 @@ export const CartModal = ({
     setErrorMessage(null);
 
     try {
-      // Get seller wallet from first item or use default
-      const sellerWallet = items[0]?.seller?.walletAddress || DEFAULT_SELLER_WALLET;
+      // Get seller wallet from first item or use platform wallet as fallback
+      const sellerWallet = items[0]?.seller?.walletAddress || PLATFORM_WALLET;
 
       // Initiate Base Pay payment
       const payment = await pay({

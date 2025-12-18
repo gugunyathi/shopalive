@@ -5,6 +5,7 @@ export interface IOrder extends Document {
   buyerWallet: string;
   sellerId: mongoose.Types.ObjectId;
   sellerWallet: string;
+  platformWallet?: string;
   streamId?: mongoose.Types.ObjectId;
   products: {
     productId: mongoose.Types.ObjectId;
@@ -16,7 +17,7 @@ export interface IOrder extends Document {
   fees: number;
   total: number;
   currency: 'USD' | 'ETH' | 'USDC';
-  paymentMethod: 'crypto' | 'card';
+  paymentMethod: 'crypto' | 'card' | 'basepay';
   transactionHash?: string;
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
   shippingAddress?: {
@@ -37,6 +38,7 @@ const OrderSchema: Schema = new Schema(
     buyerWallet: { type: String, required: true },
     sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     sellerWallet: { type: String, required: true },
+    platformWallet: { type: String },
     streamId: { type: Schema.Types.ObjectId, ref: 'Stream' },
     products: [{
       productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -54,7 +56,7 @@ const OrderSchema: Schema = new Schema(
     },
     paymentMethod: { 
       type: String, 
-      enum: ['crypto', 'card'],
+      enum: ['crypto', 'card', 'basepay'],
       required: true
     },
     transactionHash: { type: String },

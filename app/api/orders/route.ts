@@ -5,6 +5,9 @@ import User from '@/lib/models/User';
 import Product from '@/lib/models/Product';
 import Activity from '@/lib/models/Activity';
 
+// Platform wallet for receiving fees and commissions
+const PLATFORM_WALLET = process.env.NEXT_PUBLIC_PLATFORM_WALLET || '0x21f8dc27ab14584D292Afb86dCc45E994f6b8b87';
+
 // Create order
 export async function POST(request: NextRequest) {
   try {
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
     });
 
     const subtotal = orderProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const fees = subtotal * 0.025; // 2.5% platform fee
+    const fees = subtotal * 0.025; // 2.5% platform fee (sent to PLATFORM_WALLET)
     const total = subtotal + fees;
 
     // Create order
@@ -66,6 +69,7 @@ export async function POST(request: NextRequest) {
       buyerWallet,
       sellerId: seller._id,
       sellerWallet,
+      platformWallet: PLATFORM_WALLET,
       streamId,
       products: orderProducts,
       subtotal,
