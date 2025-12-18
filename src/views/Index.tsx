@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { LiveFeed } from '@/components/LiveFeed';
 import { BottomNav } from '@/components/BottomNav';
 import { TopTabs } from '@/components/TopTabs';
@@ -6,7 +7,6 @@ import { WishlistView } from '@/components/WishlistView';
 import { DiscoverView } from '@/components/DiscoverView';
 import { ProfileView } from '@/components/ProfileView';
 import { LandingPage } from '@/components/LandingPage';
-import { SignInModal } from '@/components/SignInModal';
 import { GoLiveView } from '@/components/GoLiveView';
 import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
@@ -24,13 +24,13 @@ const Index = () => {
   const [feedTab, setFeedTab] = useState<'foryou' | 'following'>('foryou');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
-  const [showSignIn, setShowSignIn] = useState(false);
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
   const [isLoadingStreams, setIsLoadingStreams] = useState(true);
   const { toast } = useToast();
-  const isSignedIn = useIsSignedIn();
+  const { isSignedIn } = useIsSignedIn();
   const isAuthenticated = isSignedIn;
   const { trackProductView } = useActivity();
+  const router = useRouter();
 
   // Fetch live streams from API
   useEffect(() => {
@@ -86,6 +86,11 @@ const Index = () => {
   }, []);
 
   const handleTabChange = (tab: string) => {
+    // If user tries to access create or profile while not signed in, navigate to sign-in page
+    if (!isAuthenticated && (tab === 'create' || tab === 'profile')) {
+      router.push('/signin');
+      return;
+    }
     setActiveTab(tab);
   };
 
@@ -193,8 +198,18 @@ const Index = () => {
           />
         );
       case 'profile':
+        // Redirect to sign-in if not authenticated
+        if (!isAuthenticated) {
+          router.push('/signin');
+          return null;
+        }
         return <ProfileView isOwnProfile />;
       case 'create':
+        // Redirect to sign-in if not authenticated
+        if (!isAuthenticated) {
+          router.push('/signin');
+          return null;
+        }
         return <GoLiveView />;
       default:
         return null;
@@ -210,12 +225,6 @@ const Index = () => {
 
       {/* Bottom Navigation */}
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {/* Sign In Modal */}
-      <SignInModal 
-        open={showSignIn} 
-        onOpenChange={setShowSignIn}
-      />
 
       {/* Cart Modal */}
       {showCart && (

@@ -1,21 +1,20 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Video, Zap, Users, TrendingUp, Sparkles, Play, ArrowRight } from "lucide-react";
-import { AuthButton } from "@coinbase/cdp-react";
 import { useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hooks";
 import { useUser } from "@/lib/context/UserContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface LandingPageProps {
   onGetStarted: () => void;
 }
 
 export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const isSignedIn = useIsSignedIn();
+  const router = useRouter();
+  const { isSignedIn } = useIsSignedIn();
   const { evmAddress } = useEvmAddress();
   const { createOrUpdateUser, fetchUser } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,7 +34,6 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
               authProvider: 'wallet',
             });
           }
-          setShowAuthModal(false);
           onGetStarted();
         } catch (error) {
           console.error('Error during sign-in:', error);
@@ -52,7 +50,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
     if (isSignedIn) {
       onGetStarted();
     } else {
-      setShowAuthModal(true);
+      router.push('/signin');
     }
   };
 
@@ -137,26 +135,6 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
           </div>
         </div>
       </div>
-
-      {/* Auth Modal */}
-      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl">Welcome to ShopAlive</DialogTitle>
-            <DialogDescription className="text-center">
-              Sign in to start shopping live and discover amazing products
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <AuthButton />
-            {isProcessing && (
-              <p className="text-center text-sm text-muted-foreground">
-                Setting up your account...
-              </p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Features Section */}
       <div className="relative py-24 bg-card/30">

@@ -58,7 +58,7 @@ interface ExternalLink {
 }
 
 export const GoLiveView = () => {
-  const isSignedIn = useIsSignedIn();
+  const { isSignedIn } = useIsSignedIn();
   const { evmAddress } = useEvmAddress();
   const { toast } = useToast();
   const [step, setStep] = useState<'setup' | 'products' | 'preview' | 'live'>('setup');
@@ -249,89 +249,40 @@ export const GoLiveView = () => {
     'Other'
   ];
 
-  // Show sign-in UI if user is not authenticated
+  // Don't render if not signed in - parent Index component handles showing modal
   if (!isSignedIn) {
-    return (
-      <div className="h-full overflow-y-auto bg-background pb-20">
-        <div className="max-w-lg mx-auto p-4">
-          {/* Header */}
-          <div className="text-center space-y-3 pt-8">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto shadow-lg shadow-primary/25">
-              <Video className="w-12 h-12 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Go Live</h1>
-              <p className="text-muted-foreground text-sm">Sign in to start your livestream</p>
-            </div>
-          </div>
-
-          {/* Sign In Card */}
-          <Card className="mt-8 border-border/50">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl">Start Selling Live</CardTitle>
-              <CardDescription>
-                Connect your wallet to go live and showcase your products to thousands of viewers
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col gap-3">
-                <AuthButton />
-              </div>
-              
-              <div className="pt-4 border-t border-border">
-                <h4 className="text-sm font-medium mb-4 text-center">Why go live on ShopAlive?</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-secondary/50 text-center">
-                    <Users className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <p className="text-xs font-medium">Reach Thousands</p>
-                    <p className="text-xs text-muted-foreground">Connect with buyers live</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-secondary/50 text-center">
-                    <DollarSign className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <p className="text-xs font-medium">Instant Sales</p>
-                    <p className="text-xs text-muted-foreground">Sell directly on stream</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-secondary/50 text-center">
-                    <Wallet className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <p className="text-xs font-medium">Crypto Payments</p>
-                    <p className="text-xs text-muted-foreground">Accept crypto & fiat</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-secondary/50 text-center">
-                    <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <p className="text-xs font-medium">Grow Your Brand</p>
-                    <p className="text-xs text-muted-foreground">Build loyal followers</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Features List */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium">What you can do:</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Radio className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span>Stream live video to your audience</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span>Showcase and sell products in real-time</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Store className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span>Link your Shopify, Etsy, or Amazon store</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span>Engage with viewers through live chat</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return null;
   }
+
+  // Previous inline sign-in UI removed - now handled by SignInModal in parent
+  // if (!isSignedIn) {
+  //   return (
+  //     <div className="h-full overflow-y-auto bg-background pb-20">
+  //       <div className="max-w-lg mx-auto p-4">
+  //         {/* Header */}
+  //         <div className="text-center space-y-3 pt-8">
+  //           <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto shadow-lg shadow-primary/25">
+  //             <Video className="w-12 h-12 text-white" />
+  //           </div>
+  //           <div>
+  //             <h1 className="text-2xl font-bold">Go Live</h1>
+  //             <p className="text-muted-foreground text-sm">Sign in to start your livestream</p>
+  //           </div>
+  //         </div>
+  //         <Card className="mt-8 border-border/50">
+  //           <CardHeader className="text-center pb-2">
+  //             <CardTitle className="text-xl">Start Selling Live</CardTitle>
+  //             <CardDescription>
+  //               Connect your wallet to go live and showcase your products to thousands of viewers
+  //             </CardDescription>
+  //           </CardHeader>
+  //           <CardContent className="space-y-6">
+  //           </CardContent>
+  //         </Card>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Live streaming view
   if (step === 'live') {

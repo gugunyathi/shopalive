@@ -17,7 +17,7 @@ export const SellerInfo = ({ seller, className, variant = 'default' }: SellerInf
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { evmAddress } = useEvmAddress();
-  const isSignedIn = useIsSignedIn();
+  const { isSignedIn } = useIsSignedIn();
   const { toast } = useToast();
   const { trackFollow, trackUnfollow } = useActivity();
 

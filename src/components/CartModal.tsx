@@ -31,7 +31,7 @@ export const CartModal = ({
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const { toast } = useToast();
   const { evmAddress } = useEvmAddress();
-  const isSignedIn = useIsSignedIn();
+  const { isSignedIn } = useIsSignedIn();
   const { trackPurchase } = useActivity();
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
