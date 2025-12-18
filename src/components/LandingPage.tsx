@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Video, Zap, Users, TrendingUp, Sparkles, Play, ArrowRight } from "lucide-react";
-import { AuthButton, useAuthModal } from "@coinbase/cdp-react";
+import { AuthButton } from "@coinbase/cdp-react";
 import { useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hooks";
 import { useUser } from "@/lib/context/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -33,7 +33,6 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
               walletAddress: evmAddress,
               username: `user_${evmAddress.slice(0, 8)}`,
               authProvider: 'wallet',
-              authProviderId: evmAddress,
             });
           }
           setShowAuthModal(false);

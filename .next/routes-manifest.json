@@ -46,6 +46,36 @@
       "namedRegex": "^/api/\\.well\\-known/farcaster\\.json(?:/)?$"
     },
     {
+      "page": "/api/activities",
+      "regex": "^/api/activities(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/activities(?:/)?$"
+    },
+    {
+      "page": "/api/follows",
+      "regex": "^/api/follows(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/follows(?:/)?$"
+    },
+    {
+      "page": "/api/orders",
+      "regex": "^/api/orders(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/orders(?:/)?$"
+    },
+    {
+      "page": "/api/products",
+      "regex": "^/api/products(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/products(?:/)?$"
+    },
+    {
+      "page": "/api/streams",
+      "regex": "^/api/streams(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/streams(?:/)?$"
+    },
+    {
       "page": "/api/users",
       "regex": "^/api/users(?:/)?$",
       "routeKeys": {},

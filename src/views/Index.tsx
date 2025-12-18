@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LiveFeed } from '@/components/LiveFeed';
 import { BottomNav } from '@/components/BottomNav';
 import { TopTabs } from '@/components/TopTabs';
@@ -12,10 +12,11 @@ import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { CartModal, CartItem } from '@/components/CartModal';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
-import { Product } from '@/types';
+import { ShoppingCart, Loader2 } from 'lucide-react';
+import { Product, LiveStream } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useIsSignedIn } from '@coinbase/cdp-hooks';
+import { useActivity } from '@/hooks/use-activity';
 
 const Index = () => {
   const [showLanding, setShowLanding] = useState(true);
@@ -24,9 +25,65 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
+  const [isLoadingStreams, setIsLoadingStreams] = useState(true);
   const { toast } = useToast();
   const isSignedIn = useIsSignedIn();
   const isAuthenticated = isSignedIn;
+  const { trackProductView } = useActivity();
+
+  // Fetch live streams from API
+  useEffect(() => {
+    const fetchStreams = async () => {
+      setIsLoadingStreams(true);
+      try {
+        const response = await fetch('/api/streams?status=live&limit=20');
+        if (response.ok) {
+          const { streams } = await response.json();
+          
+          // Transform API data to match LiveStream type
+          const transformedStreams: LiveStream[] = streams.map((stream: any) => ({
+            id: stream._id,
+            title: stream.title,
+            seller: {
+              id: stream.sellerId?.walletAddress || stream.sellerWallet,
+              name: stream.sellerId?.username || 'Seller',
+              username: stream.sellerId?.username || 'seller',
+              avatar: stream.sellerId?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
+              followers: stream.sellerId?.followers || 0,
+              isVerified: stream.sellerId?.isVerified || false,
+            },
+            viewers: stream.viewerCount || 0,
+            thumbnail: stream.thumbnailUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=1200&fit=crop',
+            products: stream.products?.map((p: any) => ({
+              id: p._id || p,
+              name: p.name || 'Product',
+              price: p.price || 0,
+              image: p.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop',
+            })) || [],
+            isLive: stream.status === 'live',
+            category: stream.category || 'Other',
+          }));
+
+          // If no live streams, use mock data
+          setLiveStreams(transformedStreams.length > 0 ? transformedStreams : mockLiveStreams);
+        } else {
+          // Fallback to mock data on error
+          setLiveStreams(mockLiveStreams);
+        }
+      } catch (error) {
+        console.error('Error fetching streams:', error);
+        setLiveStreams(mockLiveStreams);
+      } finally {
+        setIsLoadingStreams(false);
+      }
+    };
+
+    fetchStreams();
+    // Refresh streams every 30 seconds
+    const interval = setInterval(fetchStreams, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -37,6 +94,9 @@ const Index = () => {
   }
 
   const addToCart = (product: Product) => {
+    // Track product view
+    trackProductView(product.id, product.name);
+    
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -101,13 +161,19 @@ const Index = () => {
               </Button>
             </div>
             {/* Live Feed */}
-            <LiveFeed streams={mockLiveStreams} onAddToCart={addToCart} />
+            {isLoadingStreams ? (
+              <div className="h-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <LiveFeed streams={liveStreams} onAddToCart={addToCart} />
+            )}
           </div>
         );
       case 'discover':
         return (
           <DiscoverView
-            streams={mockLiveStreams}
+            streams={liveStreams.length > 0 ? liveStreams : mockLiveStreams}
             sellers={mockSellers}
             onStreamClick={(stream) => {
               console.log('Navigate to stream:', stream.id);

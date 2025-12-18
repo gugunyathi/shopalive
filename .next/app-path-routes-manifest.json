@@ -2,6 +2,11 @@
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
   "/api/.well-known/farcaster.json/route": "/api/.well-known/farcaster.json",
+  "/api/activities/route": "/api/activities",
+  "/api/follows/route": "/api/follows",
+  "/api/orders/route": "/api/orders",
+  "/api/products/route": "/api/products",
+  "/api/streams/route": "/api/streams",
   "/api/users/route": "/api/users",
   "/api/wallet/create/route": "/api/wallet/create",
   "/page": "/"
