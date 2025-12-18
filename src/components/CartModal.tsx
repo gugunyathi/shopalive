@@ -1,12 +1,14 @@
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { X, Trash2, ShoppingBag, Loader2, DollarSign, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { PaymentModal } from './PaymentModal';
 import { useToast } from '@/hooks/use-toast';
 import { useEvmAddress, useIsSignedIn } from '@coinbase/cdp-hooks';
 import { useActivity } from '@/hooks/use-activity';
+import { pay, getPaymentStatus } from '@base-org/account';
+import { BasePayButton } from '@base-org/account-ui/react';
 
 export interface CartItem extends Product {
   quantity: number;
@@ -20,6 +22,11 @@ interface CartModalProps {
   onClearCart: () => void;
 }
 
+type CheckoutState = 'idle' | 'processing' | 'polling' | 'success' | 'error';
+
+// Default seller wallet for checkout
+const DEFAULT_SELLER_WALLET = '0x1234567890123456789012345678901234567890';
+
 export const CartModal = ({
   items,
   onClose,
@@ -28,7 +35,9 @@ export const CartModal = ({
   onClearCart,
 }: CartModalProps) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutState, setCheckoutState] = useState<CheckoutState>('idle');
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const { evmAddress } = useEvmAddress();
   const { isSignedIn } = useIsSignedIn();
@@ -50,50 +59,96 @@ export const CartModal = ({
       return;
     }
     
-    setIsCheckingOut(true);
+    setCheckoutState('processing');
+    setErrorMessage(null);
+
     try {
-      // Get unique sellers from items
-      const sellerWallet = items[0]?.seller?.id || 'unknown';
-      
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          buyerWallet: evmAddress,
-          sellerWallet: sellerWallet,
-          products: items.map(item => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          })),
-        }),
+      // Get seller wallet from first item or use default
+      const sellerWallet = items[0]?.seller?.walletAddress || DEFAULT_SELLER_WALLET;
+
+      // Initiate Base Pay payment
+      const payment = await pay({
+        amount: total.toFixed(2),
+        to: sellerWallet as `0x${string}`,
+        testnet: true, // Use Base Sepolia testnet
+        payerInfo: {
+          requests: [
+            { type: 'email' },
+            { type: 'physicalAddress', optional: true }
+          ]
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create order');
-      }
+      setTransactionId(payment.id);
+      setCheckoutState('polling');
 
-      const { order } = await response.json();
-      
-      // Track purchase activity
-      await trackPurchase(order._id, total, items.length);
+      // Poll for payment status
+      const checkStatus = async (attempts = 0): Promise<void> => {
+        if (attempts > 60) {
+          setCheckoutState('error');
+          setErrorMessage('Payment verification timed out. Please check your transaction.');
+          return;
+        }
 
-      toast({
-        title: "Order Placed! 🛍️",
-        description: `Order #${order._id.slice(-8).toUpperCase()} - Total: $${total.toFixed(2)}`,
-      });
-      
-      onClearCart();
-      onClose();
+        const { status } = await getPaymentStatus({
+          id: payment.id,
+          testnet: true
+        });
+
+        if (status === 'completed') {
+          // Create order in database
+          const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              buyerWallet: evmAddress,
+              sellerWallet: sellerWallet,
+              products: items.map(item => ({
+                productId: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+              })),
+              transactionId: payment.id,
+              paymentMethod: 'basepay',
+            }),
+          });
+
+          if (response.ok) {
+            const { order } = await response.json();
+            await trackPurchase(order._id, total, items.length);
+          }
+
+          setCheckoutState('success');
+          toast({
+            title: "Payment Successful! 🎉",
+            description: `Total: $${total.toFixed(2)} USDC`,
+          });
+
+          // Clear cart after success
+          setTimeout(() => {
+            onClearCart();
+            onClose();
+          }, 3000);
+        } else if (status === 'failed') {
+          setCheckoutState('error');
+          setErrorMessage('Payment failed. Please try again.');
+        } else {
+          setTimeout(() => checkStatus(attempts + 1), 2000);
+        }
+      };
+
+      await checkStatus();
+
     } catch (error: any) {
+      console.error('Checkout error:', error);
+      setCheckoutState('error');
+      setErrorMessage(error.message || 'Payment failed. Please try again.');
       toast({
         title: "Checkout Failed",
         description: error.message || "Failed to complete checkout",
         variant: "destructive",
       });
-    } finally {
-      setIsCheckingOut(false);
     }
   };
 
@@ -233,24 +288,92 @@ export const CartModal = ({
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
                     <span className="text-foreground">Total</span>
-                    <span className="text-primary">${total.toFixed(2)}</span>
+                    <span className="text-primary">${total.toFixed(2)} USDC</span>
                   </div>
                 </div>
-                <Button
-                  className="w-full gradient-primary border-0 glow"
-                  size="lg"
-                  onClick={handleCheckout}
-                  disabled={isCheckingOut}
-                >
-                  {isCheckingOut ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Checkout (${items.length} ${items.length === 1 ? 'item' : 'items'})`
-                  )}
-                </Button>
+
+                {/* Checkout States */}
+                {checkoutState === 'idle' && (
+                  <>
+                    <div className="mb-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="h-4 w-4 text-blue-500" />
+                        <span className="text-muted-foreground">Pay with USDC on Base</span>
+                      </div>
+                    </div>
+                    <BasePayButton
+                      colorScheme="light"
+                      onClick={handleCheckout}
+                    />
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      🔒 Powered by Base Pay • {items.length} {items.length === 1 ? 'item' : 'items'}
+                    </p>
+                  </>
+                )}
+
+                {checkoutState === 'processing' && (
+                  <div className="flex flex-col items-center py-4">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                    <p className="text-foreground font-medium">Initiating payment...</p>
+                    <p className="text-xs text-muted-foreground">Complete in your wallet</p>
+                  </div>
+                )}
+
+                {checkoutState === 'polling' && (
+                  <div className="flex flex-col items-center py-4">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                    <p className="text-foreground font-medium">Confirming payment...</p>
+                    {transactionId && (
+                      <p className="text-xs text-muted-foreground font-mono mt-1">
+                        TX: {transactionId.slice(0, 8)}...
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {checkoutState === 'success' && (
+                  <div className="flex flex-col items-center py-4">
+                    <CheckCircle2 className="h-10 w-10 text-green-500 mb-2" />
+                    <p className="text-foreground font-medium">Payment Successful!</p>
+                    {transactionId && (
+                      <a
+                        href={`https://sepolia.basescan.org/tx/${transactionId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-primary mt-2 hover:underline"
+                      >
+                        View on BaseScan <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {checkoutState === 'error' && (
+                  <div className="space-y-3">
+                    <div className="flex flex-col items-center py-2">
+                      <X className="h-8 w-8 text-destructive mb-2" />
+                      <p className="text-foreground font-medium">Payment Failed</p>
+                      <p className="text-xs text-muted-foreground text-center mt-1">
+                        {errorMessage || 'Something went wrong'}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={onClose}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1 gradient-primary border-0"
+                        onClick={() => setCheckoutState('idle')}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}

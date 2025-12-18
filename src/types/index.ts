@@ -14,6 +14,7 @@ export interface Seller {
   avatar: string;
   followers: number;
   isVerified: boolean;
+  walletAddress?: string;
 }
 
 export interface LiveStream {

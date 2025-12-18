@@ -1,88 +1,128 @@
 import { useState } from 'react';
-import { X, CreditCard, Smartphone, Bitcoin, Check, ChevronRight } from 'lucide-react';
+import { X, Loader2, CheckCircle2, ExternalLink, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
+import { pay, getPaymentStatus } from '@base-org/account';
+import { BasePayButton } from '@base-org/account-ui/react';
+import { useToast } from '@/hooks/use-toast';
 
 interface PaymentModalProps {
   product: Product;
   onClose: () => void;
   onSuccess: () => void;
+  recipientAddress?: string;
 }
 
-type PaymentMethod = 'card' | 'mobile' | 'crypto';
-type CardType = 'visa' | 'mastercard' | 'amex';
-type MobileType = 'apple' | 'google' | 'samsung';
-type CryptoType = 'bitcoin' | 'ethereum' | 'usdc';
+type PaymentState = 'idle' | 'processing' | 'polling' | 'success' | 'error';
 
-export const PaymentModal = ({ product, onClose, onSuccess }: PaymentModalProps) => {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-  const [selectedSubMethod, setSelectedSubMethod] = useState<string | null>(null);
-  const [processing, setProcessing] = useState(false);
+// Default seller wallet - replace with actual seller wallet from product
+const DEFAULT_SELLER_WALLET = '0x1234567890123456789012345678901234567890';
 
-  const handlePayment = () => {
-    setProcessing(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      setProcessing(false);
-      onSuccess();
-    }, 2000);
+export const PaymentModal = ({ 
+  product, 
+  onClose, 
+  onSuccess,
+  recipientAddress 
+}: PaymentModalProps) => {
+  const [paymentState, setPaymentState] = useState<PaymentState>('idle');
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Use seller's wallet address if available, otherwise use default
+  const sellerWallet = recipientAddress || product.seller?.walletAddress || DEFAULT_SELLER_WALLET;
+
+  const handleBasePay = async () => {
+    setPaymentState('processing');
+    setErrorMessage(null);
+
+    try {
+      // Initiate payment using Base Pay
+      const payment = await pay({
+        amount: product.price.toString(),
+        to: sellerWallet as `0x${string}`,
+        testnet: true, // Use Base Sepolia testnet
+        payerInfo: {
+          requests: [
+            { type: 'email' },
+            { type: 'physicalAddress', optional: true }
+          ]
+        }
+      });
+
+      setTransactionId(payment.id);
+      setPaymentState('polling');
+
+      // Poll for payment status
+      const checkStatus = async (attempts = 0): Promise<void> => {
+        if (attempts > 60) { // 2 minute timeout (60 * 2 seconds)
+          setPaymentState('error');
+          setErrorMessage('Payment verification timed out. Please check your transaction.');
+          return;
+        }
+
+        const { status } = await getPaymentStatus({
+          id: payment.id,
+          testnet: true
+        });
+
+        if (status === 'completed') {
+          setPaymentState('success');
+          toast({
+            title: 'Payment Successful! 🎉',
+            description: `You've purchased ${product.name}`,
+          });
+          
+          // Wait a moment before closing
+          setTimeout(() => {
+            onSuccess();
+          }, 2000);
+        } else if (status === 'failed') {
+          setPaymentState('error');
+          setErrorMessage('Payment failed. Please try again.');
+        } else {
+          // Status is pending, keep polling
+          setTimeout(() => checkStatus(attempts + 1), 2000);
+        }
+      };
+
+      await checkStatus();
+
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      setPaymentState('error');
+      setErrorMessage(error.message || 'Payment failed. Please try again.');
+      toast({
+        title: 'Payment Failed',
+        description: error.message || 'Something went wrong',
+        variant: 'destructive',
+      });
+    }
   };
-
-  const paymentMethods = [
-    {
-      id: 'card' as PaymentMethod,
-      name: 'Card Payment',
-      icon: CreditCard,
-      description: 'Visa, Mastercard, Amex',
-      subOptions: [
-        { id: 'visa', name: 'Visa', icon: '💳' },
-        { id: 'mastercard', name: 'Mastercard', icon: '💳' },
-        { id: 'amex', name: 'American Express', icon: '💳' },
-      ],
-    },
-    {
-      id: 'mobile' as PaymentMethod,
-      name: 'Mobile Pay',
-      icon: Smartphone,
-      description: 'Apple Pay, Google Pay, Samsung Pay',
-      subOptions: [
-        { id: 'apple', name: 'Apple Pay', icon: '' },
-        { id: 'google', name: 'Google Pay', icon: '🅖' },
-        { id: 'samsung', name: 'Samsung Pay', icon: '🅢' },
-      ],
-    },
-    {
-      id: 'crypto' as PaymentMethod,
-      name: 'Cryptocurrency',
-      icon: Bitcoin,
-      description: 'Bitcoin, Ethereum, USDC',
-      subOptions: [
-        { id: 'bitcoin', name: 'Bitcoin (BTC)', icon: '₿' },
-        { id: 'ethereum', name: 'Ethereum (ETH)', icon: 'Ξ' },
-        { id: 'usdc', name: 'USDC', icon: '$' },
-      ],
-    },
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={paymentState === 'processing' || paymentState === 'polling' ? undefined : onClose}
       />
       
       {/* Modal */}
       <div className="relative w-full max-w-md bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-hidden animate-slideUp">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">Checkout</h2>
-          <button 
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-muted transition-colors"
-          >
-            <X className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <h2 className="text-lg font-semibold text-foreground">
+            {paymentState === 'success' ? 'Payment Complete' : 'Checkout with Base Pay'}
+          </h2>
+          {paymentState !== 'processing' && paymentState !== 'polling' && (
+            <button 
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Product Summary */}
@@ -108,89 +148,144 @@ export const PaymentModal = ({ product, onClose, onSuccess }: PaymentModalProps)
           </div>
         </div>
 
-        {/* Payment Methods */}
-        <div className="p-4 space-y-3 overflow-y-auto max-h-[50vh]">
-          <p className="text-sm font-medium text-muted-foreground mb-3">Select payment method</p>
-          
-          {paymentMethods.map((method) => (
-            <div key={method.id} className="space-y-2">
-              <button
-                onClick={() => {
-                  setSelectedMethod(selectedMethod === method.id ? null : method.id);
-                  setSelectedSubMethod(null);
-                }}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all ${
-                  selectedMethod === method.id
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${
-                  selectedMethod === method.id ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  <method.icon className="w-5 h-5" />
+        {/* Payment Content */}
+        <div className="p-6 space-y-4">
+          {paymentState === 'idle' && (
+            <>
+              {/* Base Pay Info */}
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-500/20 rounded-lg">
+                    <DollarSign className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-foreground">Pay with USDC</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Fast, secure payments on Base network. No gas fees, instant settlement.
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-foreground">{method.name}</p>
-                  <p className="text-xs text-muted-foreground">{method.description}</p>
-                </div>
-                <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${
-                  selectedMethod === method.id ? 'rotate-90' : ''
-                }`} />
-              </button>
+              </div>
 
-              {/* Sub-options */}
-              {selectedMethod === method.id && (
-                <div className="ml-4 pl-4 border-l-2 border-primary/30 space-y-2 animate-fadeIn">
-                  {method.subOptions.map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => setSelectedSubMethod(sub.id)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        selectedSubMethod === sub.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <span className="text-xl w-8 text-center">{sub.icon}</span>
-                      <span className="flex-1 text-left text-sm font-medium text-foreground">
-                        {sub.name}
-                      </span>
-                      {selectedSubMethod === sub.id && (
-                        <Check className="w-4 h-4 text-primary" />
-                      )}
-                    </button>
-                  ))}
+              {/* Payment Summary */}
+              <div className="space-y-2 pt-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Item Price</span>
+                  <span className="text-foreground">${product.price.toFixed(2)}</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Network Fee</span>
+                  <span className="text-green-500">Free</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
+                  <span className="text-foreground">Total</span>
+                  <span className="text-primary">${product.price.toFixed(2)} USDC</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {paymentState === 'processing' && (
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+              <p className="text-foreground font-medium">Initiating payment...</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Please complete the payment in your wallet
+              </p>
+            </div>
+          )}
+
+          {paymentState === 'polling' && (
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+              <p className="text-foreground font-medium">Confirming payment...</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                This usually takes a few seconds
+              </p>
+              {transactionId && (
+                <p className="text-xs text-muted-foreground mt-2 font-mono">
+                  TX: {transactionId.slice(0, 8)}...{transactionId.slice(-6)}
+                </p>
               )}
             </div>
-          ))}
+          )}
+
+          {paymentState === 'success' && (
+            <div className="flex flex-col items-center py-8">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-10 h-10 text-green-500" />
+              </div>
+              <p className="text-foreground font-medium text-lg">Payment Successful!</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your order is being processed
+              </p>
+              {transactionId && (
+                <a
+                  href={`https://sepolia.basescan.org/tx/${transactionId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm text-primary mt-4 hover:underline"
+                >
+                  View on BaseScan
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+          )}
+
+          {paymentState === 'error' && (
+            <div className="flex flex-col items-center py-8">
+              <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mb-4">
+                <X className="w-10 h-10 text-destructive" />
+              </div>
+              <p className="text-foreground font-medium">Payment Failed</p>
+              <p className="text-sm text-muted-foreground mt-1 text-center">
+                {errorMessage || 'Something went wrong. Please try again.'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-border bg-muted/30">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-muted-foreground">Total</span>
-            <span className="text-xl font-bold text-foreground">${product.price}</span>
-          </div>
-          <Button
-            variant="gradient"
-            className="w-full h-12 text-base font-semibold"
-            disabled={!selectedSubMethod || processing}
-            onClick={handlePayment}
-          >
-            {processing ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processing...
-              </span>
-            ) : (
-              `Pay $${product.price}`
-            )}
-          </Button>
-          <p className="text-xs text-center text-muted-foreground mt-3">
-            🔒 Secure payment powered by encrypted connection
-          </p>
+          {paymentState === 'idle' && (
+            <>
+              <BasePayButton
+                colorScheme="light"
+                onClick={handleBasePay}
+              />
+              <p className="text-xs text-center text-muted-foreground mt-3">
+                🔒 Powered by Base Pay • USDC on Base Sepolia
+              </p>
+            </>
+          )}
+
+          {paymentState === 'error' && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 gradient-primary border-0"
+                onClick={() => setPaymentState('idle')}
+              >
+                Try Again
+              </Button>
+            </div>
+          )}
+
+          {paymentState === 'success' && (
+            <Button
+              className="w-full gradient-primary border-0"
+              onClick={onClose}
+            >
+              Done
+            </Button>
+          )}
         </div>
       </div>
     </div>

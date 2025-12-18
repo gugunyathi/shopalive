@@ -8,6 +8,7 @@ import { DiscoverView } from '@/components/DiscoverView';
 import { ProfileView } from '@/components/ProfileView';
 import { LandingPage } from '@/components/LandingPage';
 import { GoLiveView } from '@/components/GoLiveView';
+import { WalletDropdown } from '@/components/WalletDropdown';
 import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { CartModal, CartItem } from '@/components/CartModal';
@@ -148,7 +149,8 @@ const Index = () => {
           <div className="h-full relative">
             {/* Top Navigation */}
             <div className="absolute top-4 left-0 right-0 z-30 flex justify-between items-center px-4 safe-area-top">
-              <div className="w-10" /> {/* Spacer for centering */}
+              {/* Wallet Icon */}
+              <WalletDropdown />
               <TopTabs activeTab={feedTab} onTabChange={setFeedTab} />
               {/* Cart Icon at Top */}
               <Button

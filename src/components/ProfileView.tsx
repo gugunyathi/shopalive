@@ -1,13 +1,22 @@
 import { Seller } from '@/types';
-import { BadgeCheck, Settings, Grid3X3, Video, ShoppingBag, Users, UserPlus, Share2, Wallet, Copy, ExternalLink, User, LogIn, Loader2 } from 'lucide-react';
+import { BadgeCheck, Settings, Grid3X3, Video, ShoppingBag, Users, UserPlus, Share2, Wallet, Copy, ExternalLink, User, LogIn, Loader2, Send, Download, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/lib/context/UserContext';
 import { useEvmAddress, useIsSignedIn } from '@coinbase/cdp-hooks';
 import { useToast } from '@/hooks/use-toast';
-import { AuthButton } from '@coinbase/cdp-react';
+import { AuthButton, SendEvmTransactionButton } from '@coinbase/cdp-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ProfileViewProps {
   seller?: Seller;
@@ -36,6 +45,11 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
   const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
   const [userStreams, setUserStreams] = useState<UserStream[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [showReceiveDialog, setShowReceiveDialog] = useState(false);
+  const [sendTo, setSendTo] = useState('');
+  const [sendAmount, setSendAmount] = useState('');
+  const [ethBalance] = useState('0.001');
   const { user: dbUser, fetchUser } = useUser();
   const { evmAddress: address } = useEvmAddress();
   const { isSignedIn } = useIsSignedIn();
@@ -209,11 +223,19 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
         {/* Wallet Info - Only for own profile */}
         {isOwnProfile && address && (
           <div className="w-full max-w-md mt-6 p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Wallet className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-sm">Wallet Address</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-sm">My Wallet</span>
+              </div>
+              <div className="text-right">
+                <p className="font-bold">{ethBalance} ETH</p>
+                <p className="text-xs text-muted-foreground">≈ $3.50 USD</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 bg-background rounded-lg p-3">
+            
+            {/* Address */}
+            <div className="flex items-center gap-2 bg-background rounded-lg p-3 mb-3">
               <code className="text-xs text-muted-foreground flex-1 truncate">
                 {address}
               </code>
@@ -232,7 +254,7 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
                 asChild
               >
                 <a 
-                  href={`https://basescan.org/address/${address}`} 
+                  href={`https://sepolia.basescan.org/address/${address}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >
@@ -240,11 +262,50 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
                 </a>
               </Button>
             </div>
-            {dbUser?.walletId && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Wallet ID: {dbUser.walletId.slice(0, 20)}...
-              </p>
-            )}
+
+            {/* Send/Receive Buttons */}
+            <div className="flex gap-2 mb-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => setShowSendDialog(true)}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Send
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => setShowReceiveDialog(true)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Receive
+              </Button>
+            </div>
+
+            {/* Token Balances */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Coins className="h-4 w-4" />
+                <span>Tokens</span>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-background">
+                <div className="flex items-center gap-2">
+                  <span>⟠</span>
+                  <span className="text-sm">ETH</span>
+                </div>
+                <span className="text-sm font-medium">{ethBalance}</span>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-background">
+                <div className="flex items-center gap-2">
+                  <span>💵</span>
+                  <span className="text-sm">USDC</span>
+                </div>
+                <span className="text-sm font-medium">0.00</span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -379,6 +440,95 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
           </div>
         )}
       </div>
+
+      {/* Send Dialog */}
+      <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send ETH</DialogTitle>
+            <DialogDescription>
+              Send ETH to another wallet address on Base Sepolia
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="recipient">Recipient Address</Label>
+              <Input
+                id="recipient"
+                placeholder="0x..."
+                value={sendTo}
+                onChange={(e) => setSendTo(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount (ETH)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.001"
+                value={sendAmount}
+                onChange={(e) => setSendAmount(e.target.value)}
+              />
+            </div>
+            {address && sendTo && sendAmount && (
+              <SendEvmTransactionButton
+                account={address}
+                network="base-sepolia"
+                transaction={{
+                  to: sendTo as `0x${string}`,
+                  value: BigInt(Math.floor(parseFloat(sendAmount) * 1e18)),
+                  chainId: 84532,
+                  type: "eip1559",
+                }}
+                onSuccess={(hash) => {
+                  toast({
+                    title: 'Transaction Sent!',
+                    description: `Hash: ${hash.slice(0, 10)}...`,
+                  });
+                  setShowSendDialog(false);
+                  setSendTo('');
+                  setSendAmount('');
+                }}
+                onError={(error) => {
+                  toast({
+                    title: 'Transaction Failed',
+                    description: error.message,
+                    variant: 'destructive',
+                  });
+                }}
+                pendingLabel="Sending..."
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receive Dialog */}
+      <Dialog open={showReceiveDialog} onOpenChange={setShowReceiveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Receive Funds</DialogTitle>
+            <DialogDescription>
+              Share your wallet address to receive ETH or tokens
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-secondary/50 rounded-lg text-center">
+              <div className="w-32 h-32 mx-auto mb-4 bg-white rounded-lg flex items-center justify-center">
+                <div className="text-4xl">📱</div>
+              </div>
+              <p className="font-mono text-sm break-all mb-4">{address}</p>
+              <Button onClick={() => address && copyToClipboard(address)} variant="outline" className="w-full">
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Address
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Only send ETH and ERC-20 tokens on Base Sepolia network
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
