@@ -7,6 +7,8 @@ type ActivityType =
   | 'stream_view'
   | 'stream_start'
   | 'stream_end'
+  | 'video_view'
+  | 'video_like'
   | 'product_view'
   | 'product_add'
   | 'purchase'
@@ -18,7 +20,7 @@ type ActivityType =
   | 'like'
   | 'comment';
 
-type TargetType = 'stream' | 'product' | 'user' | 'order';
+type TargetType = 'stream' | 'product' | 'user' | 'order' | 'video';
 
 interface TrackActivityParams {
   type: ActivityType;

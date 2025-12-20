@@ -17,7 +17,6 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { mockChatMessages } from '@/data/mockData';
 import { useActivity } from '@/hooks/use-activity';
 
 interface StreamViewerProps {
@@ -44,7 +43,6 @@ export const StreamViewer = ({
   const [showProducts, setShowProducts] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50000) + 10000);
-  const [messages, setMessages] = useState<ChatMessage[]>(mockChatMessages);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const { trackStreamView, trackLike } = useActivity();
   const hasTrackedView = useRef(false);
@@ -78,19 +76,6 @@ export const StreamViewer = ({
     }
     setIsLiked(!isLiked);
     setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
-  };
-
-  const handleSendMessage = (message: string) => {
-    const newMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      userId: 'current-user',
-      username: 'you',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop',
-      message,
-      timestamp: new Date(),
-      type: 'message',
-    };
-    setMessages((prev) => [...prev, newMessage]);
   };
 
   const currentProduct = stream.products[currentProductIndex];
@@ -246,8 +231,7 @@ export const StreamViewer = ({
             </Button>
           </div>
           <LiveChat
-            messages={messages}
-            onSendMessage={handleSendMessage}
+            streamId={stream.id}
             className="h-[calc(100%-60px)]"
           />
         </div>

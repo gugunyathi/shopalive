@@ -78,29 +78,44 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const walletAddress = searchParams.get('walletAddress');
     const authProviderId = searchParams.get('authProviderId');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const sort = searchParams.get('sort'); // e.g., 'followers', '-followers', 'createdAt'
 
-    if (!walletAddress && !authProviderId) {
-      return NextResponse.json(
-        { error: 'walletAddress or authProviderId is required' },
-        { status: 400 }
-      );
+    // If specific user requested
+    if (walletAddress || authProviderId) {
+      const user = await User.findOne({
+        $or: [
+          ...(walletAddress ? [{ walletAddress }] : []),
+          ...(authProviderId ? [{ authProviderId }] : [])
+        ]
+      });
+
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ user }, { status: 200 });
     }
 
-    const user = await User.findOne({
-      $or: [
-        ...(walletAddress ? [{ walletAddress }] : []),
-        ...(authProviderId ? [{ authProviderId }] : [])
-      ]
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+    // List users (for discover, top sellers, etc.)
+    let sortOption: any = { createdAt: -1 };
+    if (sort === 'followers') {
+      sortOption = { followers: -1 };
+    } else if (sort === '-followers') {
+      sortOption = { followers: 1 };
+    } else if (sort === 'createdAt') {
+      sortOption = { createdAt: -1 };
     }
 
-    return NextResponse.json({ user }, { status: 200 });
+    const users = await User.find({ isSeller: true }) // Only get sellers for discover
+      .sort(sortOption)
+      .limit(limit)
+      .select('-authProviderId -email -phone'); // Exclude sensitive fields
+
+    return NextResponse.json({ users, count: users.length }, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching user:', error);
     return NextResponse.json(

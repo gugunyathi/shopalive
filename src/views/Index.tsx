@@ -8,13 +8,14 @@ import { DiscoverView } from '@/components/DiscoverView';
 import { ProfileView } from '@/components/ProfileView';
 import { LandingPage } from '@/components/LandingPage';
 import { GoLiveView } from '@/components/GoLiveView';
+import { VideoUploadView } from '@/components/VideoUploadView';
 import { WalletDropdown } from '@/components/WalletDropdown';
-import { mockLiveStreams, mockSellers, mockWishlist } from '@/data/mockData';
+import { mockLiveStreams, mockSellers } from '@/data/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { CartModal, CartItem } from '@/components/CartModal';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2 } from 'lucide-react';
-import { Product, LiveStream } from '@/types';
+import { ShoppingCart, Loader2, Radio, Film } from 'lucide-react';
+import { Product, LiveStream, Seller, ShoppableVideo } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useIsSignedIn } from '@coinbase/cdp-hooks';
 import { useActivity } from '@/hooks/use-activity';
@@ -22,10 +23,13 @@ import { useActivity } from '@/hooks/use-activity';
 const Index = () => {
   const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
+  const [createMode, setCreateMode] = useState<'live' | 'video'>('live');
   const [feedTab, setFeedTab] = useState<'foryou' | 'following'>('foryou');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
+  const [shoppableVideos, setShoppableVideos] = useState<ShoppableVideo[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [isLoadingStreams, setIsLoadingStreams] = useState(true);
   const { toast } = useToast();
   const { isSignedIn } = useIsSignedIn();
@@ -84,6 +88,95 @@ const Index = () => {
     // Refresh streams every 30 seconds
     const interval = setInterval(fetchStreams, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch shoppable videos
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const response = await fetch('/api/videos?status=active&limit=20');
+        if (response.ok) {
+          const { videos } = await response.json();
+          
+          const transformedVideos: ShoppableVideo[] = videos.map((video: any) => ({
+            id: video._id,
+            title: video.title,
+            description: video.description,
+            videoUrl: video.videoUrl,
+            thumbnail: video.thumbnailUrl,
+            seller: {
+              id: video.sellerId?.walletAddress || video.sellerWallet,
+              name: video.sellerId?.username || 'Seller',
+              username: video.sellerId?.username || 'seller',
+              avatar: video.sellerId?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
+              followers: video.sellerId?.followers || 0,
+              isVerified: video.sellerId?.isVerified || false,
+            },
+            products: video.products?.map((p: any) => ({
+              id: p._id || p,
+              name: p.name || 'Product',
+              price: p.price || 0,
+              image: p.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop',
+              seller: {
+                id: video.sellerId?.walletAddress || video.sellerWallet,
+                name: video.sellerId?.username || 'Seller',
+                username: video.sellerId?.username || 'seller',
+                avatar: video.sellerId?.avatar || '',
+                followers: 0,
+                isVerified: false,
+              }
+            })) || [],
+            category: video.category || 'Other',
+            tags: video.tags || [],
+            viewCount: video.viewCount || 0,
+            likeCount: video.likeCount || 0,
+            duration: video.duration || 0,
+            isVideo: true,
+          }));
+
+          setShoppableVideos(transformedVideos);
+        }
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+      }
+    };
+
+    fetchVideos();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchVideos, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch top sellers
+  useEffect(() => {
+    const fetchSellers = async () => {
+      try {
+        const response = await fetch('/api/users?limit=10&sort=followers');
+        if (response.ok) {
+          const { users } = await response.json();
+          
+          const transformedSellers: Seller[] = users.map((user: any) => ({
+            id: user._id || user.walletAddress,
+            name: user.username || 'Seller',
+            username: user.username || 'seller',
+            avatar: user.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
+            followers: user.followers || 0,
+            isVerified: user.isVerified || false,
+            rating: 4.5,
+            products: [],
+          }));
+
+          setSellers(transformedSellers.length > 0 ? transformedSellers : mockSellers);
+        } else {
+          setSellers(mockSellers);
+        }
+      } catch (error) {
+        console.error('Error fetching sellers:', error);
+        setSellers(mockSellers);
+      }
+    };
+
+    fetchSellers();
   }, []);
 
   const handleTabChange = (tab: string) => {
@@ -173,7 +266,7 @@ const Index = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <LiveFeed streams={liveStreams} onAddToCart={addToCart} />
+              <LiveFeed streams={liveStreams} videos={shoppableVideos} onAddToCart={addToCart} />
             )}
           </div>
         );
@@ -181,7 +274,7 @@ const Index = () => {
         return (
           <DiscoverView
             streams={liveStreams.length > 0 ? liveStreams : mockLiveStreams}
-            sellers={mockSellers}
+            sellers={sellers.length > 0 ? sellers : mockSellers}
             onStreamClick={(stream) => {
               console.log('Navigate to stream:', stream.id);
               setActiveTab('home');
@@ -194,9 +287,8 @@ const Index = () => {
       case 'wishlist':
         return (
           <WishlistView
-            items={mockWishlist}
             onRemove={(id) => console.log('Remove:', id)}
-            onBuy={(item) => console.log('Buy:', item)}
+            onBuy={(item) => addToCart(item.product)}
           />
         );
       case 'profile':
@@ -212,7 +304,32 @@ const Index = () => {
           router.push('/signin');
           return null;
         }
-        return <GoLiveView />;
+        return (
+          <div className="min-h-screen bg-background">
+            {/* Mode Toggle */}
+            <div className="sticky top-0 z-20 glass-dark border-b border-border">
+              <div className="flex items-center justify-center gap-2 p-4">
+                <Button
+                  variant={createMode === 'live' ? 'default' : 'ghost'}
+                  className={createMode === 'live' ? 'gradient-primary' : ''}
+                  onClick={() => setCreateMode('live')}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Go Live
+                </Button>
+                <Button
+                  variant={createMode === 'video' ? 'default' : 'ghost'}
+                  className={createMode === 'video' ? 'gradient-primary' : ''}
+                  onClick={() => setCreateMode('video')}
+                >
+                  <Film className="h-4 w-4 mr-2" />
+                  Upload Video
+                </Button>
+              </div>
+            </div>
+            {createMode === 'live' ? <GoLiveView /> : <VideoUploadView />}
+          </div>
+        );
       default:
         return null;
     }

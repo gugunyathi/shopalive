@@ -1,10 +1,11 @@
 import { Product } from '@/types';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PaymentModal } from '@/components/PaymentModal';
 import { useToast } from '@/hooks/use-toast';
+import { useEvmAddress, useIsSignedIn } from '@coinbase/cdp-hooks';
 
 interface ProductCardProps {
   product: Product;
@@ -20,12 +21,75 @@ export const ProductCard = ({
   onAddToWishlist,
 }: ProductCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const { toast } = useToast();
+  const { evmAddress } = useEvmAddress();
+  const { isSignedIn } = useIsSignedIn();
   
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
+
+  // Check if product is in wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!evmAddress || !isSignedIn) return;
+      try {
+        const response = await fetch(`/api/wishlist?userWallet=${evmAddress}&productId=${product.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setIsLiked(data.inWishlist);
+        }
+      } catch (error) {
+        console.error('Error checking wishlist:', error);
+      }
+    };
+    checkWishlist();
+  }, [evmAddress, isSignedIn, product.id]);
+
+  // Toggle wishlist
+  const handleWishlistToggle = async () => {
+    if (!evmAddress || !isSignedIn) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to save items',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLikeLoading(true);
+    try {
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userWallet: evmAddress,
+          productId: product.id,
+          action: isLiked ? 'remove' : 'add',
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsLiked(data.action === 'added' || data.action === 'exists');
+        toast({
+          title: data.action === 'added' ? 'Added to wishlist' : 'Removed from wishlist',
+          description: data.action === 'added' ? `${product.name} saved` : `${product.name} removed`,
+        });
+        onAddToWishlist?.(product);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update wishlist',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
 
   const handleBuyClick = () => {
     setShowPayment(true);
@@ -105,15 +169,17 @@ export const ProductCard = ({
               </span>
             )}
             <button
-              onClick={() => {
-                setIsLiked(!isLiked);
-                onAddToWishlist?.(product);
-              }}
-              className="absolute top-3 right-3 p-2 glass rounded-full hover:scale-110 transition-transform"
+              onClick={handleWishlistToggle}
+              disabled={isLikeLoading}
+              className="absolute top-3 right-3 p-2 glass rounded-full hover:scale-110 transition-transform disabled:opacity-50"
             >
-              <Heart
-                className={cn('h-5 w-5', isLiked ? 'fill-accent text-accent' : 'text-foreground')}
-              />
+              {isLikeLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-foreground" />
+              ) : (
+                <Heart
+                  className={cn('h-5 w-5', isLiked ? 'fill-accent text-accent' : 'text-foreground')}
+                />
+              )}
             </button>
           </div>
           <div className="p-4">
@@ -185,12 +251,14 @@ export const ProductCard = ({
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => {
-                setIsLiked(!isLiked);
-                onAddToWishlist?.(product);
-              }}
+              onClick={handleWishlistToggle}
+              disabled={isLikeLoading}
             >
-              <Heart className={cn('h-4 w-4', isLiked && 'fill-accent text-accent')} />
+              {isLikeLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Heart className={cn('h-4 w-4', isLiked && 'fill-accent text-accent')} />
+              )}
             </Button>
           </div>
         </div>

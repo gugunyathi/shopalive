@@ -1,16 +1,76 @@
+import { useState, useEffect } from 'react';
 import { WishlistItem } from '@/types';
 import { ProductCard } from './ProductCard';
-import { Sparkles, TrendingDown, Clock, Trash2 } from 'lucide-react';
+import { Sparkles, TrendingDown, Clock, Trash2, Heart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useEvmAddress, useIsSignedIn } from '@coinbase/cdp-hooks';
+import { useToast } from '@/hooks/use-toast';
 
 interface WishlistViewProps {
-  items: WishlistItem[];
+  items?: WishlistItem[];
   onRemove?: (id: string) => void;
   onBuy?: (item: WishlistItem) => void;
 }
 
-export const WishlistView = ({ items, onRemove, onBuy }: WishlistViewProps) => {
+export const WishlistView = ({ items: propItems, onRemove, onBuy }: WishlistViewProps) => {
+  const [items, setItems] = useState<WishlistItem[]>(propItems || []);
+  const [isLoading, setIsLoading] = useState(true);
+  const { evmAddress } = useEvmAddress();
+  const { isSignedIn } = useIsSignedIn();
+  const { toast } = useToast();
+
+  // Fetch wishlist from API
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!evmAddress || !isSignedIn) {
+        setItems([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/wishlist?userWallet=${evmAddress}`);
+        if (response.ok) {
+          const data = await response.json();
+          setItems(data.items || []);
+        }
+      } catch (error) {
+        console.error('Error fetching wishlist:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWishlist();
+  }, [evmAddress, isSignedIn]);
+
+  // Handle remove item
+  const handleRemove = async (itemId: string) => {
+    if (!evmAddress) return;
+
+    try {
+      const response = await fetch(`/api/wishlist?userWallet=${evmAddress}&itemId=${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setItems(prev => prev.filter(item => item.id !== itemId));
+        toast({
+          title: 'Removed',
+          description: 'Item removed from wishlist',
+        });
+        onRemove?.(itemId);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove item',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const aiRecommended = items.filter((i) => i.aiRecommended);
   const saved = items.filter((i) => !i.aiRecommended);
   const priceDrops = items.filter(
@@ -27,7 +87,29 @@ export const WishlistView = ({ items, onRemove, onBuy }: WishlistViewProps) => {
         </p>
       </div>
 
-      {/* AI Recommendations Section */}
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {/* Not Signed In State */}
+      {!isLoading && !isSignedIn && (
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8">
+          <div className="p-4 rounded-full bg-secondary mb-4">
+            <Heart className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Sign in to see your wishlist</h3>
+          <p className="text-muted-foreground max-w-xs">
+            Save items you love and track price drops by signing in
+          </p>
+        </div>
+      )}
+
+      {!isLoading && isSignedIn && (
+        <>
+          {/* AI Recommendations Section */}
       {aiRecommended.length > 0 && (
         <section className="p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -126,7 +208,7 @@ export const WishlistView = ({ items, onRemove, onBuy }: WishlistViewProps) => {
                   onAddToCart={() => onBuy?.(item)}
                 />
                 <button
-                  onClick={() => onRemove?.(item.id)}
+                  onClick={() => handleRemove(item.id)}
                   className="absolute top-3 right-3 p-2 glass rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
@@ -149,9 +231,8 @@ export const WishlistView = ({ items, onRemove, onBuy }: WishlistViewProps) => {
           </p>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 };
-
-// Add missing import
-import { Heart } from 'lucide-react';

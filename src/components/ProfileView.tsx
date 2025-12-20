@@ -38,12 +38,24 @@ interface UserStream {
   status: string;
 }
 
+interface UserVideo {
+  _id: string;
+  title: string;
+  thumbnailUrl: string;
+  viewCount: number;
+  likeCount: number;
+  duration: number;
+  status: string;
+  createdAt: string;
+}
+
 export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) => {
   const [activeTab, setActiveTab] = useState<'videos' | 'products' | 'liked'>('videos');
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
   const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
   const [userStreams, setUserStreams] = useState<UserStream[]>([]);
+  const [userVideos, setUserVideos] = useState<UserVideo[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
   const [showReceiveDialog, setShowReceiveDialog] = useState(false);
@@ -55,7 +67,7 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
   const { isSignedIn } = useIsSignedIn();
   const { toast } = useToast();
 
-  // Fetch user's products and streams
+  // Fetch user's products, streams, and videos
   useEffect(() => {
     const fetchUserContent = async () => {
       if (!address && !seller?.id) return;
@@ -76,6 +88,13 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
         if (streamsRes.ok) {
           const { streams } = await streamsRes.json();
           setUserStreams(streams || []);
+        }
+
+        // Fetch videos
+        const videosRes = await fetch(`/api/videos?sellerWallet=${walletAddress}`);
+        if (videosRes.ok) {
+          const { videos } = await videosRes.json();
+          setUserVideos(videos || []);
         }
       } catch (error) {
         console.error('Error fetching user content:', error);
@@ -379,33 +398,62 @@ export const ProfileView = ({ seller, isOwnProfile = true }: ProfileViewProps) =
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : activeTab === 'videos' ? (
-          userStreams.length > 0 ? (
-            userStreams.map((stream) => (
-              <div
-                key={stream._id}
-                className="aspect-[3/4] bg-secondary relative overflow-hidden group cursor-pointer"
-              >
-                <img
-                  src={stream.thumbnailUrl || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=400&fit=crop'}
-                  alt={stream.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-2 left-2 right-2">
-                  <p className="text-white text-xs font-medium truncate">{stream.title}</p>
-                  <p className="text-white/70 text-xs">{stream.viewerCount} views</p>
-                </div>
-                {stream.status === 'live' && (
-                  <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded">
-                    LIVE
+          // Show both videos and streams in the videos tab
+          [...userVideos, ...userStreams].length > 0 ? (
+            <>
+              {/* Shoppable Videos */}
+              {userVideos.map((video) => (
+                <div
+                  key={`video-${video._id}`}
+                  className="aspect-[3/4] bg-secondary relative overflow-hidden group cursor-pointer"
+                >
+                  <img
+                    src={video.thumbnailUrl || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=400&fit=crop'}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <p className="text-white text-xs font-medium truncate">{video.title}</p>
+                    <div className="flex items-center gap-2 text-white/70 text-xs">
+                      <span>{video.viewCount} views</span>
+                      <span>•</span>
+                      <span>{video.likeCount} likes</span>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))
+                  <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+                    {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
+                  </div>
+                </div>
+              ))}
+              {/* Live Streams */}
+              {userStreams.map((stream) => (
+                <div
+                  key={`stream-${stream._id}`}
+                  className="aspect-[3/4] bg-secondary relative overflow-hidden group cursor-pointer"
+                >
+                  <img
+                    src={stream.thumbnailUrl || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=400&fit=crop'}
+                    alt={stream.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <p className="text-white text-xs font-medium truncate">{stream.title}</p>
+                    <p className="text-white/70 text-xs">{stream.viewerCount} views</p>
+                  </div>
+                  {stream.status === 'live' && (
+                    <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded">
+                      LIVE
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
           ) : (
             <div className="col-span-3 text-center py-12 text-muted-foreground">
               <Video className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No streams yet</p>
+              <p>No videos or streams yet</p>
             </div>
           )
         ) : activeTab === 'products' ? (

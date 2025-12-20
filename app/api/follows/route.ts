@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Get followers/following
+// Get followers/following or check follow status
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -112,12 +112,33 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const walletAddress = searchParams.get('walletAddress');
     const type = searchParams.get('type'); // 'followers' or 'following'
+    const followerWallet = searchParams.get('followerWallet');
+    const followingWallet = searchParams.get('followingWallet');
     const limit = parseInt(searchParams.get('limit') || '50');
     const page = parseInt(searchParams.get('page') || '1');
 
+    // Check if user is following another user
+    if (followerWallet && followingWallet) {
+      const [follower, following] = await Promise.all([
+        User.findOne({ walletAddress: followerWallet }),
+        User.findOne({ walletAddress: followingWallet })
+      ]);
+
+      if (!follower || !following) {
+        return NextResponse.json({ isFollowing: false });
+      }
+
+      const existingFollow = await Follow.findOne({
+        followerId: follower._id,
+        followingId: following._id
+      });
+
+      return NextResponse.json({ isFollowing: !!existingFollow });
+    }
+
     if (!walletAddress || !type) {
       return NextResponse.json(
-        { error: 'walletAddress and type are required' },
+        { error: 'walletAddress and type are required, or followerWallet and followingWallet' },
         { status: 400 }
       );
     }
